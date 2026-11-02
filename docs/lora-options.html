@@ -1,0 +1,359 @@
+<title>LoRa Link Options</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: datasheet page - assumptions strip, quick picks, then one dense sortable table */
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --fg: #16202b;
+  --muted: #5a6674;
+  --line: #dce2e9;
+  --accent: #2456a6;
+  --accent-soft: #e3ebf8;
+  --warn: #9a5200;
+  --warn-soft: #fbeedb;
+  --bar-batt: #3f8a63;
+  --bar-range: #2456a6;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f141a; --surface: #161d26; --fg: #e3e8ee; --muted: #95a1ae; --line: #263241;
+    --accent: #8ab4ff; --accent-soft: #1b2a41; --warn: #f0b35a; --warn-soft: #3a2a12;
+    --bar-batt: #6fc597; --bar-range: #8ab4ff; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f141a; --surface: #161d26; --fg: #e3e8ee; --muted: #95a1ae; --line: #263241;
+  --accent: #8ab4ff; --accent-soft: #1b2a41; --warn: #f0b35a; --warn-soft: #3a2a12;
+  --bar-batt: #6fc597; --bar-range: #8ab4ff; color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.page { max-width: 1240px; margin: 0 auto; display: grid; gap: 28px; }
+h1, h2 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+h1 { font-size: 2rem; font-weight: 600; letter-spacing: -0.01em; }
+h2 { font-size: 1.15rem; font-weight: 600; }
+p { margin: 0; max-width: 70ch; }
+.lede { color: var(--muted); margin-top: 6px; }
+.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.label {
+  font-family: var(--font-display); font-weight: 500; font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+}
+
+/* Assumptions strip */
+.specs {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
+}
+.spec { background: var(--surface); padding: 10px 14px; display: grid; gap: 2px; min-width: 0; }
+.spec .num { font-size: 0.95rem; }
+.spec input {
+  font: inherit; font-family: var(--font-data); width: 100%; max-width: 9ch;
+  border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--fg); padding: 2px 6px;
+}
+.spec input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.spec.editable { background: var(--accent-soft); }
+
+/* Quick picks */
+.picks { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.pick {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
+  padding: 14px 16px; display: grid; gap: 8px; align-content: start; min-width: 0;
+}
+.pick.current { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.pick h3 { margin: 0; font-family: var(--font-display); font-size: 1rem; font-weight: 600; }
+.pick .cfg { font-family: var(--font-data); font-size: 0.85rem; color: var(--accent); }
+.pick dl { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; font-size: 0.85rem; }
+.pick dt { color: var(--muted); min-width: 0; }
+.pick dd { margin: 0; text-align: right; white-space: nowrap; font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.pick p { font-size: 0.82rem; color: var(--muted); }
+
+/* Filters */
+.filters { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; }
+.group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.group .label { margin-right: 4px; }
+.chip {
+  font: inherit; font-family: var(--font-data); font-size: 0.82rem; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); color: var(--fg);
+  border-radius: 999px; padding: 3px 11px;
+}
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.chip:focus-visible, th button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.count { color: var(--muted); font-size: 0.85rem; }
+
+/* Table */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th { position: sticky; top: 0; background: var(--surface); vertical-align: bottom; z-index: 1; }
+th button {
+  font: inherit; font-family: var(--font-display); font-weight: 600; font-size: 0.78rem; color: var(--fg);
+  background: none; border: 0; cursor: pointer; padding: 0; text-align: right; line-height: 1.25;
+}
+th button .unit { display: block; font-family: var(--font-body); font-weight: 400; color: var(--muted); font-size: 0.72rem; }
+th[aria-sort] button::after { content: " \2195"; color: var(--muted); }
+th[aria-sort="ascending"] button::after { content: " \2191"; color: var(--accent); }
+th[aria-sort="descending"] button::after { content: " \2193"; color: var(--accent); }
+td { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+td.cfg { text-align: left; color: var(--fg); }
+tbody tr:hover { background: var(--accent-soft); }
+tr.current { background: var(--accent-soft); }
+tr.current td.cfg { font-weight: 500; color: var(--accent); }
+.tag {
+  display: inline-block; font-family: var(--font-display); font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.05em; text-transform: uppercase; border-radius: 3px; padding: 0 5px; margin-left: 6px;
+  vertical-align: 1px;
+}
+.tag.now { background: var(--accent); color: var(--surface); }
+.tag.warn { background: var(--warn-soft); color: var(--warn); }
+.est { color: var(--muted); }
+.bar { display: inline-grid; grid-template-columns: 54px auto; gap: 8px; align-items: center; justify-content: end; }
+.bar i { display: block; height: 6px; border-radius: 3px; background: var(--line); position: relative; overflow: hidden; }
+.bar i b { position: absolute; inset: 0 auto 0 0; border-radius: 3px; }
+.bar.batt i b { background: var(--bar-batt); }
+.bar.range i b { background: var(--bar-range); }
+
+/* Notes */
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+.notes ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 6px; font-size: 0.88rem; }
+.notes li { max-width: 70ch; }
+</style>
+
+<div class="page">
+  <header>
+    <h1>LoRa Link Options</h1>
+    <p class="lede">Door sensor on a DX-LR30 (SX1262, 433.5&nbsp;MHz). Every combination of spreading factor,
+      bandwidth and TX power for our 10-byte status packet, with airtime, sensor battery drain and rough range.
+      Click a column to sort; change the interval or battery to recalculate.</p>
+  </header>
+
+  <section class="specs" aria-label="Assumptions">
+    <div class="spec"><span class="label">Packet</span><span class="num">10 B payload</span></div>
+    <div class="spec"><span class="label">Framing</span><span class="num">CR 4/5 · preamble 8 · CRC</span></div>
+    <div class="spec editable"><label class="label" for="interval">TX interval (s)</label><input id="interval" type="number" min="1" max="3600" step="1" value="10"></div>
+    <div class="spec editable"><label class="label" for="battery">Battery (mAh)</label><input id="battery" type="number" min="100" max="100000" step="100" value="2000"></div>
+    <div class="spec"><span class="label">Sleep floor</span><span class="num">31 µA</span></div>
+    <div class="spec"><span class="label">Antennas</span><span class="num">2 dBi each · 10 dB margin</span></div>
+  </section>
+
+  <section>
+    <h2>Quick picks</h2>
+    <div class="picks" id="picks" style="margin-top:12px"></div>
+  </section>
+
+  <section style="display:grid; gap:12px">
+    <div class="filters" id="filters"></div>
+    <div class="table-wrap">
+      <table id="table">
+        <thead><tr id="head"></tr></thead>
+        <tbody id="body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="notes">
+    <div>
+      <h2>How the numbers are made</h2>
+      <ul>
+        <li><b>Airtime</b>: Semtech LoRa formula, explicit header, CRC on; low-data-rate optimisation switches on automatically when a symbol is ≥16&nbsp;ms (SF11/SF12 at 125&nbsp;kHz, SF12 at 250&nbsp;kHz).</li>
+        <li><b>TX current</b>: whole board while transmitting. 22&nbsp;dBm is measured at the battery: 140&nbsp;mA with the Otii supplying 3.7&nbsp;V into the TPS63802. The other powers are the SX1262 datasheet current with optimal PA settings (which RadioLib uses: 102&nbsp;mA at 20&nbsp;dBm, 95 at 17, 90 at 14) plus ~20&nbsp;mA for the awake STM32; the 10&nbsp;dBm radio figure (55&nbsp;mA) is an estimate, the datasheet does not list it.</li>
+        <li><b>Charge per TX</b>: TX current × airtime, plus the STM32 awake at ~20&nbsp;mA for 12&nbsp;ms around the packet, plus a fixed 20&nbsp;ms LED flash (~2&nbsp;mA).</li>
+        <li><b>Average current</b>: charge per TX ÷ interval + 31&nbsp;µA sleep floor, measured at the battery with the Otii supplying 3.7&nbsp;V into the TPS63802 (STM32 STOP mode, SX1262 warm sleep; CH340, POW LED resistor and AMS1117 removed).</li>
+        <li><b>Sensitivity</b>: −174 + 10·log(BW) + 6&nbsp;dB noise figure + the SF's demodulation SNR limit (−7.5&nbsp;dB at SF7 down to −20&nbsp;dB at SF12).</li>
+        <li><b>Range</b>: link budget minus a 10&nbsp;dB fade margin. <em>Open</em> = line of sight over flat ground, antennas at 1.5&nbsp;m (two-ray model). <em>Urban</em> = through buildings and walls (path-loss exponent 4). Treat both as ±50% estimates; a site test decides.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Not included, and limits</h2>
+      <ul>
+        <li><b>Board overhead</b>: a stock DX-PJ26 sleeps at ~30&nbsp;mA (CH340 on the 3.3&nbsp;V rail, POW LED, AMS1117 back-fed from 3V3). The sleep floor above needs all three removed.</li>
+        <li><b>Measured vs. model</b> at SF10 / 22&nbsp;dBm: 0.29&nbsp;s on air and ~42&nbsp;mAs per packet on the board (the table gives ~41). The 140&nbsp;mA and 31&nbsp;µA are battery currents at 3.7&nbsp;V through the TPS63802, about 3% below the 3.3&nbsp;V board current; a lower cell voltage raises the battery current somewhat.</li>
+        <li><b>Door closed</b>: the PB13 pull-up adds ~80&nbsp;µA while the reed contact is closed.</li>
+        <li><b>22&nbsp;dBm needs ≥3.3&nbsp;V</b> on the radio; maximum power drops as the battery voltage falls.</li>
+        <li><b>Duty cycle</b>: European 433&nbsp;MHz rules allow 10&nbsp;mW ERP and 10% duty cycle. Rows over 10% are flagged; anything above 10&nbsp;dBm is over the usual power limit.</li>
+        <li><b>Link timeout</b>: KEY selects the sensor heartbeat (2&nbsp;s / 10&nbsp;s / 1&nbsp;min) and the receiver link timeout (7&nbsp;s / 33&nbsp;s / 190&nbsp;s); set both boards of a pair to the same mode. Type the heartbeat into the interval box above to see its battery life.</li>
+        <li><b>Both boards</b> must use the same SF and bandwidth. Change them in <span class="num">include/config.h</span>.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+const ROWS = [{"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 125, "sf": 7, "ldro": 0, "bitrate": 5469, "airtimeMs": 41.2, "dutyPct": 0.82, "chargePerTxMas": 6.05, "avgUa": 1241, "batteryDays": 67, "sensitivity": -124.5, "linkBudget": 150.5, "rangeOpenM": 4890.0, "rangeUrbanM": 770.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 125, "sf": 8, "ldro": 0, "bitrate": 3125, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 10.39, "avgUa": 2108, "batteryDays": 40, "sensitivity": -127.0, "linkBudget": 153.0, "rangeOpenM": 5650.0, "rangeUrbanM": 880.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 125, "sf": 9, "ldro": 0, "bitrate": 1758, "airtimeMs": 144.4, "dutyPct": 2.89, "chargePerTxMas": 20.49, "avgUa": 4130, "batteryDays": 20, "sensitivity": -129.5, "linkBudget": 155.5, "rangeOpenM": 6520.0, "rangeUrbanM": 1020.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 125, "sf": 10, "ldro": 0, "bitrate": 977, "airtimeMs": 288.8, "dutyPct": 5.78, "chargePerTxMas": 40.71, "avgUa": 8173, "batteryDays": 10, "sensitivity": -132.0, "linkBudget": 158.0, "rangeOpenM": 7530.0, "rangeUrbanM": 1180.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 125, "sf": 11, "ldro": 1, "bitrate": 537, "airtimeMs": 577.5, "dutyPct": 11.55, "chargePerTxMas": 81.14, "avgUa": 16258, "batteryDays": 5, "sensitivity": -134.5, "linkBudget": 160.5, "rangeOpenM": 8700.0, "rangeUrbanM": 1360.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 125, "sf": 12, "ldro": 1, "bitrate": 293, "airtimeMs": 991.2, "dutyPct": 19.82, "chargePerTxMas": 139.05, "avgUa": 27841, "batteryDays": 3, "sensitivity": -137.0, "linkBudget": 163.0, "rangeOpenM": 10040.0, "rangeUrbanM": 1570.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 250, "sf": 7, "ldro": 0, "bitrate": 10938, "airtimeMs": 20.6, "dutyPct": 0.41, "chargePerTxMas": 3.17, "avgUa": 664, "batteryDays": 125, "sensitivity": -121.5, "linkBudget": 147.5, "rangeOpenM": 4110.0, "rangeUrbanM": 640.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 250, "sf": 8, "ldro": 0, "bitrate": 6250, "airtimeMs": 36.1, "dutyPct": 0.72, "chargePerTxMas": 5.33, "avgUa": 1098, "batteryDays": 76, "sensitivity": -124.0, "linkBudget": 150.0, "rangeOpenM": 4750.0, "rangeUrbanM": 740.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 250, "sf": 9, "ldro": 0, "bitrate": 3516, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 10.39, "avgUa": 2108, "batteryDays": 40, "sensitivity": -126.5, "linkBudget": 152.5, "rangeOpenM": 5480.0, "rangeUrbanM": 860.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 250, "sf": 10, "ldro": 0, "bitrate": 1953, "airtimeMs": 144.4, "dutyPct": 2.89, "chargePerTxMas": 20.49, "avgUa": 4130, "batteryDays": 20, "sensitivity": -129.0, "linkBudget": 155.0, "rangeOpenM": 6330.0, "rangeUrbanM": 990.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 250, "sf": 11, "ldro": 0, "bitrate": 1074, "airtimeMs": 247.8, "dutyPct": 4.96, "chargePerTxMas": 34.97, "avgUa": 7026, "batteryDays": 12, "sensitivity": -131.5, "linkBudget": 157.5, "rangeOpenM": 7310.0, "rangeUrbanM": 1140.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 250, "sf": 12, "ldro": 1, "bitrate": 586, "airtimeMs": 495.6, "dutyPct": 9.91, "chargePerTxMas": 69.67, "avgUa": 13964, "batteryDays": 6, "sensitivity": -134.0, "linkBudget": 160.0, "rangeOpenM": 8450.0, "rangeUrbanM": 1320.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 500, "sf": 7, "ldro": 0, "bitrate": 21875, "airtimeMs": 10.3, "dutyPct": 0.21, "chargePerTxMas": 1.72, "avgUa": 376, "batteryDays": 222, "sensitivity": -118.5, "linkBudget": 144.5, "rangeOpenM": 3460.0, "rangeUrbanM": 540.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 500, "sf": 8, "ldro": 0, "bitrate": 12500, "airtimeMs": 18.0, "dutyPct": 0.36, "chargePerTxMas": 2.81, "avgUa": 592, "batteryDays": 141, "sensitivity": -121.0, "linkBudget": 147.0, "rangeOpenM": 3990.0, "rangeUrbanM": 620.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 500, "sf": 9, "ldro": 0, "bitrate": 7031, "airtimeMs": 36.1, "dutyPct": 0.72, "chargePerTxMas": 5.33, "avgUa": 1098, "batteryDays": 76, "sensitivity": -123.5, "linkBudget": 149.5, "rangeOpenM": 4610.0, "rangeUrbanM": 720.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 500, "sf": 10, "ldro": 0, "bitrate": 3906, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 10.39, "avgUa": 2108, "batteryDays": 40, "sensitivity": -126.0, "linkBudget": 152.0, "rangeOpenM": 5330.0, "rangeUrbanM": 830.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 500, "sf": 11, "ldro": 0, "bitrate": 2148, "airtimeMs": 123.9, "dutyPct": 2.48, "chargePerTxMas": 17.63, "avgUa": 3556, "batteryDays": 23, "sensitivity": -128.5, "linkBudget": 154.5, "rangeOpenM": 6150.0, "rangeUrbanM": 960.0}, {"power": 22, "txMa": 140, "txEst": false, "txMeas": true, "bw": 500, "sf": 12, "ldro": 0, "bitrate": 1172, "airtimeMs": 247.8, "dutyPct": 4.96, "chargePerTxMas": 34.97, "avgUa": 7026, "batteryDays": 12, "sensitivity": -131.0, "linkBudget": 157.0, "rangeOpenM": 7100.0, "rangeUrbanM": 1110.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 125, "sf": 7, "ldro": 0, "bitrate": 5469, "airtimeMs": 41.2, "dutyPct": 0.82, "chargePerTxMas": 5.31, "avgUa": 1093, "batteryDays": 76, "sensitivity": -124.5, "linkBudget": 148.5, "rangeOpenM": 4360.0, "rangeUrbanM": 680.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 125, "sf": 8, "ldro": 0, "bitrate": 3125, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 9.09, "avgUa": 1848, "batteryDays": 45, "sensitivity": -127.0, "linkBudget": 151.0, "rangeOpenM": 5030.0, "rangeUrbanM": 790.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 125, "sf": 9, "ldro": 0, "bitrate": 1758, "airtimeMs": 144.4, "dutyPct": 2.89, "chargePerTxMas": 17.89, "avgUa": 3610, "batteryDays": 23, "sensitivity": -129.5, "linkBudget": 153.5, "rangeOpenM": 5810.0, "rangeUrbanM": 910.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 125, "sf": 10, "ldro": 0, "bitrate": 977, "airtimeMs": 288.8, "dutyPct": 5.78, "chargePerTxMas": 35.51, "avgUa": 7133, "batteryDays": 12, "sensitivity": -132.0, "linkBudget": 156.0, "rangeOpenM": 6710.0, "rangeUrbanM": 1050.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 125, "sf": 11, "ldro": 1, "bitrate": 537, "airtimeMs": 577.5, "dutyPct": 11.55, "chargePerTxMas": 70.74, "avgUa": 14179, "batteryDays": 6, "sensitivity": -134.5, "linkBudget": 158.5, "rangeOpenM": 7750.0, "rangeUrbanM": 1210.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 125, "sf": 12, "ldro": 1, "bitrate": 293, "airtimeMs": 991.2, "dutyPct": 19.82, "chargePerTxMas": 121.21, "avgUa": 24273, "batteryDays": 3, "sensitivity": -137.0, "linkBudget": 161.0, "rangeOpenM": 8950.0, "rangeUrbanM": 1400.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 250, "sf": 7, "ldro": 0, "bitrate": 10938, "airtimeMs": 20.6, "dutyPct": 0.41, "chargePerTxMas": 2.79, "avgUa": 590, "batteryDays": 141, "sensitivity": -121.5, "linkBudget": 145.5, "rangeOpenM": 3670.0, "rangeUrbanM": 570.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 250, "sf": 8, "ldro": 0, "bitrate": 6250, "airtimeMs": 36.1, "dutyPct": 0.72, "chargePerTxMas": 4.68, "avgUa": 968, "batteryDays": 86, "sensitivity": -124.0, "linkBudget": 148.0, "rangeOpenM": 4230.0, "rangeUrbanM": 660.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 250, "sf": 9, "ldro": 0, "bitrate": 3516, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 9.09, "avgUa": 1848, "batteryDays": 45, "sensitivity": -126.5, "linkBudget": 150.5, "rangeOpenM": 4890.0, "rangeUrbanM": 760.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 250, "sf": 10, "ldro": 0, "bitrate": 1953, "airtimeMs": 144.4, "dutyPct": 2.89, "chargePerTxMas": 17.89, "avgUa": 3610, "batteryDays": 23, "sensitivity": -129.0, "linkBudget": 153.0, "rangeOpenM": 5640.0, "rangeUrbanM": 880.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 250, "sf": 11, "ldro": 0, "bitrate": 1074, "airtimeMs": 247.8, "dutyPct": 4.96, "chargePerTxMas": 30.51, "avgUa": 6134, "batteryDays": 14, "sensitivity": -131.5, "linkBudget": 155.5, "rangeOpenM": 6520.0, "rangeUrbanM": 1020.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 250, "sf": 12, "ldro": 1, "bitrate": 586, "airtimeMs": 495.6, "dutyPct": 9.91, "chargePerTxMas": 60.75, "avgUa": 12180, "batteryDays": 7, "sensitivity": -134.0, "linkBudget": 158.0, "rangeOpenM": 7530.0, "rangeUrbanM": 1180.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 500, "sf": 7, "ldro": 0, "bitrate": 21875, "airtimeMs": 10.3, "dutyPct": 0.21, "chargePerTxMas": 1.54, "avgUa": 338, "batteryDays": 246, "sensitivity": -118.5, "linkBudget": 142.5, "rangeOpenM": 3080.0, "rangeUrbanM": 480.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 500, "sf": 8, "ldro": 0, "bitrate": 12500, "airtimeMs": 18.0, "dutyPct": 0.36, "chargePerTxMas": 2.48, "avgUa": 527, "batteryDays": 158, "sensitivity": -121.0, "linkBudget": 145.0, "rangeOpenM": 3560.0, "rangeUrbanM": 560.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 500, "sf": 9, "ldro": 0, "bitrate": 7031, "airtimeMs": 36.1, "dutyPct": 0.72, "chargePerTxMas": 4.68, "avgUa": 968, "batteryDays": 86, "sensitivity": -123.5, "linkBudget": 147.5, "rangeOpenM": 4110.0, "rangeUrbanM": 640.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 500, "sf": 10, "ldro": 0, "bitrate": 3906, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 9.09, "avgUa": 1848, "batteryDays": 45, "sensitivity": -126.0, "linkBudget": 150.0, "rangeOpenM": 4750.0, "rangeUrbanM": 740.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 500, "sf": 11, "ldro": 0, "bitrate": 2148, "airtimeMs": 123.9, "dutyPct": 2.48, "chargePerTxMas": 15.4, "avgUa": 3110, "batteryDays": 27, "sensitivity": -128.5, "linkBudget": 152.5, "rangeOpenM": 5480.0, "rangeUrbanM": 860.0}, {"power": 20, "txMa": 122, "txEst": false, "txMeas": false, "bw": 500, "sf": 12, "ldro": 0, "bitrate": 1172, "airtimeMs": 247.8, "dutyPct": 4.96, "chargePerTxMas": 30.51, "avgUa": 6134, "batteryDays": 14, "sensitivity": -131.0, "linkBudget": 155.0, "rangeOpenM": 6330.0, "rangeUrbanM": 990.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 125, "sf": 7, "ldro": 0, "bitrate": 5469, "airtimeMs": 41.2, "dutyPct": 0.82, "chargePerTxMas": 5.02, "avgUa": 1035, "batteryDays": 81, "sensitivity": -124.5, "linkBudget": 145.5, "rangeOpenM": 3670.0, "rangeUrbanM": 570.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 125, "sf": 8, "ldro": 0, "bitrate": 3125, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 8.58, "avgUa": 1747, "batteryDays": 48, "sensitivity": -127.0, "linkBudget": 148.0, "rangeOpenM": 4240.0, "rangeUrbanM": 660.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 125, "sf": 9, "ldro": 0, "bitrate": 1758, "airtimeMs": 144.4, "dutyPct": 2.89, "chargePerTxMas": 16.88, "avgUa": 3408, "batteryDays": 24, "sensitivity": -129.5, "linkBudget": 150.5, "rangeOpenM": 4890.0, "rangeUrbanM": 770.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 125, "sf": 10, "ldro": 0, "bitrate": 977, "airtimeMs": 288.8, "dutyPct": 5.78, "chargePerTxMas": 33.49, "avgUa": 6729, "batteryDays": 12, "sensitivity": -132.0, "linkBudget": 153.0, "rangeOpenM": 5650.0, "rangeUrbanM": 880.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 125, "sf": 11, "ldro": 1, "bitrate": 537, "airtimeMs": 577.5, "dutyPct": 11.55, "chargePerTxMas": 66.7, "avgUa": 13370, "batteryDays": 6, "sensitivity": -134.5, "linkBudget": 155.5, "rangeOpenM": 6520.0, "rangeUrbanM": 1020.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 125, "sf": 12, "ldro": 1, "bitrate": 293, "airtimeMs": 991.2, "dutyPct": 19.82, "chargePerTxMas": 114.27, "avgUa": 22885, "batteryDays": 4, "sensitivity": -137.0, "linkBudget": 158.0, "rangeOpenM": 7530.0, "rangeUrbanM": 1180.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 250, "sf": 7, "ldro": 0, "bitrate": 10938, "airtimeMs": 20.6, "dutyPct": 0.41, "chargePerTxMas": 2.65, "avgUa": 561, "batteryDays": 149, "sensitivity": -121.5, "linkBudget": 142.5, "rangeOpenM": 3080.0, "rangeUrbanM": 480.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 250, "sf": 8, "ldro": 0, "bitrate": 6250, "airtimeMs": 36.1, "dutyPct": 0.72, "chargePerTxMas": 4.43, "avgUa": 917, "batteryDays": 91, "sensitivity": -124.0, "linkBudget": 145.0, "rangeOpenM": 3560.0, "rangeUrbanM": 560.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 250, "sf": 9, "ldro": 0, "bitrate": 3516, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 8.58, "avgUa": 1747, "batteryDays": 48, "sensitivity": -126.5, "linkBudget": 147.5, "rangeOpenM": 4110.0, "rangeUrbanM": 640.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 250, "sf": 10, "ldro": 0, "bitrate": 1953, "airtimeMs": 144.4, "dutyPct": 2.89, "chargePerTxMas": 16.88, "avgUa": 3408, "batteryDays": 24, "sensitivity": -129.0, "linkBudget": 150.0, "rangeOpenM": 4750.0, "rangeUrbanM": 740.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 250, "sf": 11, "ldro": 0, "bitrate": 1074, "airtimeMs": 247.8, "dutyPct": 4.96, "chargePerTxMas": 28.78, "avgUa": 5787, "batteryDays": 14, "sensitivity": -131.5, "linkBudget": 152.5, "rangeOpenM": 5480.0, "rangeUrbanM": 860.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 250, "sf": 12, "ldro": 1, "bitrate": 586, "airtimeMs": 495.6, "dutyPct": 9.91, "chargePerTxMas": 57.28, "avgUa": 11486, "batteryDays": 7, "sensitivity": -134.0, "linkBudget": 155.0, "rangeOpenM": 6330.0, "rangeUrbanM": 990.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 500, "sf": 7, "ldro": 0, "bitrate": 21875, "airtimeMs": 10.3, "dutyPct": 0.21, "chargePerTxMas": 1.46, "avgUa": 324, "batteryDays": 257, "sensitivity": -118.5, "linkBudget": 139.5, "rangeOpenM": 2590.0, "rangeUrbanM": 410.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 500, "sf": 8, "ldro": 0, "bitrate": 12500, "airtimeMs": 18.0, "dutyPct": 0.36, "chargePerTxMas": 2.36, "avgUa": 502, "batteryDays": 166, "sensitivity": -121.0, "linkBudget": 142.0, "rangeOpenM": 2990.0, "rangeUrbanM": 470.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 500, "sf": 9, "ldro": 0, "bitrate": 7031, "airtimeMs": 36.1, "dutyPct": 0.72, "chargePerTxMas": 4.43, "avgUa": 917, "batteryDays": 91, "sensitivity": -123.5, "linkBudget": 144.5, "rangeOpenM": 3460.0, "rangeUrbanM": 540.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 500, "sf": 10, "ldro": 0, "bitrate": 3906, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 8.58, "avgUa": 1747, "batteryDays": 48, "sensitivity": -126.0, "linkBudget": 147.0, "rangeOpenM": 3990.0, "rangeUrbanM": 620.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 500, "sf": 11, "ldro": 0, "bitrate": 2148, "airtimeMs": 123.9, "dutyPct": 2.48, "chargePerTxMas": 14.53, "avgUa": 2937, "batteryDays": 28, "sensitivity": -128.5, "linkBudget": 149.5, "rangeOpenM": 4610.0, "rangeUrbanM": 720.0}, {"power": 17, "txMa": 115, "txEst": false, "txMeas": false, "bw": 500, "sf": 12, "ldro": 0, "bitrate": 1172, "airtimeMs": 247.8, "dutyPct": 4.96, "chargePerTxMas": 28.78, "avgUa": 5787, "batteryDays": 14, "sensitivity": -131.0, "linkBudget": 152.0, "rangeOpenM": 5330.0, "rangeUrbanM": 830.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 125, "sf": 7, "ldro": 0, "bitrate": 5469, "airtimeMs": 41.2, "dutyPct": 0.82, "chargePerTxMas": 4.81, "avgUa": 994, "batteryDays": 84, "sensitivity": -124.5, "linkBudget": 142.5, "rangeOpenM": 3090.0, "rangeUrbanM": 480.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 125, "sf": 8, "ldro": 0, "bitrate": 3125, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 8.22, "avgUa": 1675, "batteryDays": 50, "sensitivity": -127.0, "linkBudget": 145.0, "rangeOpenM": 3560.0, "rangeUrbanM": 560.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 125, "sf": 9, "ldro": 0, "bitrate": 1758, "airtimeMs": 144.4, "dutyPct": 2.89, "chargePerTxMas": 16.16, "avgUa": 3263, "batteryDays": 26, "sensitivity": -129.5, "linkBudget": 147.5, "rangeOpenM": 4110.0, "rangeUrbanM": 640.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 125, "sf": 10, "ldro": 0, "bitrate": 977, "airtimeMs": 288.8, "dutyPct": 5.78, "chargePerTxMas": 32.04, "avgUa": 6440, "batteryDays": 13, "sensitivity": -132.0, "linkBudget": 150.0, "rangeOpenM": 4750.0, "rangeUrbanM": 740.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 125, "sf": 11, "ldro": 1, "bitrate": 537, "airtimeMs": 577.5, "dutyPct": 11.55, "chargePerTxMas": 63.81, "avgUa": 12793, "batteryDays": 7, "sensitivity": -134.5, "linkBudget": 152.5, "rangeOpenM": 5490.0, "rangeUrbanM": 860.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 125, "sf": 12, "ldro": 1, "bitrate": 293, "airtimeMs": 991.2, "dutyPct": 19.82, "chargePerTxMas": 109.32, "avgUa": 21894, "batteryDays": 4, "sensitivity": -137.0, "linkBudget": 155.0, "rangeOpenM": 6340.0, "rangeUrbanM": 990.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 250, "sf": 7, "ldro": 0, "bitrate": 10938, "airtimeMs": 20.6, "dutyPct": 0.41, "chargePerTxMas": 2.55, "avgUa": 540, "batteryDays": 154, "sensitivity": -121.5, "linkBudget": 139.5, "rangeOpenM": 2590.0, "rangeUrbanM": 410.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 250, "sf": 8, "ldro": 0, "bitrate": 6250, "airtimeMs": 36.1, "dutyPct": 0.72, "chargePerTxMas": 4.25, "avgUa": 881, "batteryDays": 95, "sensitivity": -124.0, "linkBudget": 142.0, "rangeOpenM": 3000.0, "rangeUrbanM": 470.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 250, "sf": 9, "ldro": 0, "bitrate": 3516, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 8.22, "avgUa": 1675, "batteryDays": 50, "sensitivity": -126.5, "linkBudget": 144.5, "rangeOpenM": 3460.0, "rangeUrbanM": 540.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 250, "sf": 10, "ldro": 0, "bitrate": 1953, "airtimeMs": 144.4, "dutyPct": 2.89, "chargePerTxMas": 16.16, "avgUa": 3263, "batteryDays": 26, "sensitivity": -129.0, "linkBudget": 147.0, "rangeOpenM": 4000.0, "rangeUrbanM": 630.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 250, "sf": 11, "ldro": 0, "bitrate": 1074, "airtimeMs": 247.8, "dutyPct": 4.96, "chargePerTxMas": 27.54, "avgUa": 5539, "batteryDays": 15, "sensitivity": -131.5, "linkBudget": 149.5, "rangeOpenM": 4610.0, "rangeUrbanM": 720.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 250, "sf": 12, "ldro": 1, "bitrate": 586, "airtimeMs": 495.6, "dutyPct": 9.91, "chargePerTxMas": 54.8, "avgUa": 10991, "batteryDays": 8, "sensitivity": -134.0, "linkBudget": 152.0, "rangeOpenM": 5330.0, "rangeUrbanM": 830.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 500, "sf": 7, "ldro": 0, "bitrate": 21875, "airtimeMs": 10.3, "dutyPct": 0.21, "chargePerTxMas": 1.41, "avgUa": 314, "batteryDays": 266, "sensitivity": -118.5, "linkBudget": 136.5, "rangeOpenM": 2180.0, "rangeUrbanM": 340.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 500, "sf": 8, "ldro": 0, "bitrate": 12500, "airtimeMs": 18.0, "dutyPct": 0.36, "chargePerTxMas": 2.27, "avgUa": 484, "batteryDays": 172, "sensitivity": -121.0, "linkBudget": 139.0, "rangeOpenM": 2520.0, "rangeUrbanM": 390.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 500, "sf": 9, "ldro": 0, "bitrate": 7031, "airtimeMs": 36.1, "dutyPct": 0.72, "chargePerTxMas": 4.25, "avgUa": 881, "batteryDays": 95, "sensitivity": -123.5, "linkBudget": 141.5, "rangeOpenM": 2910.0, "rangeUrbanM": 460.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 500, "sf": 10, "ldro": 0, "bitrate": 3906, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 8.22, "avgUa": 1675, "batteryDays": 50, "sensitivity": -126.0, "linkBudget": 144.0, "rangeOpenM": 3360.0, "rangeUrbanM": 530.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 500, "sf": 11, "ldro": 0, "bitrate": 2148, "airtimeMs": 123.9, "dutyPct": 2.48, "chargePerTxMas": 13.91, "avgUa": 2813, "batteryDays": 30, "sensitivity": -128.5, "linkBudget": 146.5, "rangeOpenM": 3880.0, "rangeUrbanM": 610.0}, {"power": 14, "txMa": 110, "txEst": false, "txMeas": false, "bw": 500, "sf": 12, "ldro": 0, "bitrate": 1172, "airtimeMs": 247.8, "dutyPct": 4.96, "chargePerTxMas": 27.54, "avgUa": 5539, "batteryDays": 15, "sensitivity": -131.0, "linkBudget": 149.0, "rangeOpenM": 4480.0, "rangeUrbanM": 700.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 125, "sf": 7, "ldro": 0, "bitrate": 5469, "airtimeMs": 41.2, "dutyPct": 0.82, "chargePerTxMas": 3.37, "avgUa": 705, "batteryDays": 118, "sensitivity": -124.5, "linkBudget": 138.5, "rangeOpenM": 2450.0, "rangeUrbanM": 380.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 125, "sf": 8, "ldro": 0, "bitrate": 3125, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 5.69, "avgUa": 1170, "batteryDays": 71, "sensitivity": -127.0, "linkBudget": 141.0, "rangeOpenM": 2830.0, "rangeUrbanM": 440.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 125, "sf": 9, "ldro": 0, "bitrate": 1758, "airtimeMs": 144.4, "dutyPct": 2.89, "chargePerTxMas": 11.11, "avgUa": 2253, "batteryDays": 37, "sensitivity": -129.5, "linkBudget": 143.5, "rangeOpenM": 3270.0, "rangeUrbanM": 510.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 125, "sf": 10, "ldro": 0, "bitrate": 977, "airtimeMs": 288.8, "dutyPct": 5.78, "chargePerTxMas": 21.94, "avgUa": 4419, "batteryDays": 19, "sensitivity": -132.0, "linkBudget": 146.0, "rangeOpenM": 3770.0, "rangeUrbanM": 590.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 125, "sf": 11, "ldro": 1, "bitrate": 537, "airtimeMs": 577.5, "dutyPct": 11.55, "chargePerTxMas": 43.6, "avgUa": 8750, "batteryDays": 10, "sensitivity": -134.5, "linkBudget": 148.5, "rangeOpenM": 4360.0, "rangeUrbanM": 680.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 125, "sf": 12, "ldro": 1, "bitrate": 293, "airtimeMs": 991.2, "dutyPct": 19.82, "chargePerTxMas": 74.62, "avgUa": 14955, "batteryDays": 6, "sensitivity": -137.0, "linkBudget": 151.0, "rangeOpenM": 5030.0, "rangeUrbanM": 790.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 250, "sf": 7, "ldro": 0, "bitrate": 10938, "airtimeMs": 20.6, "dutyPct": 0.41, "chargePerTxMas": 1.83, "avgUa": 396, "batteryDays": 210, "sensitivity": -121.5, "linkBudget": 135.5, "rangeOpenM": 2060.0, "rangeUrbanM": 320.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 250, "sf": 8, "ldro": 0, "bitrate": 6250, "airtimeMs": 36.1, "dutyPct": 0.72, "chargePerTxMas": 2.99, "avgUa": 628, "batteryDays": 133, "sensitivity": -124.0, "linkBudget": 138.0, "rangeOpenM": 2380.0, "rangeUrbanM": 370.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 250, "sf": 9, "ldro": 0, "bitrate": 3516, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 5.69, "avgUa": 1170, "batteryDays": 71, "sensitivity": -126.5, "linkBudget": 140.5, "rangeOpenM": 2750.0, "rangeUrbanM": 430.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 250, "sf": 10, "ldro": 0, "bitrate": 1953, "airtimeMs": 144.4, "dutyPct": 2.89, "chargePerTxMas": 11.11, "avgUa": 2253, "batteryDays": 37, "sensitivity": -129.0, "linkBudget": 143.0, "rangeOpenM": 3170.0, "rangeUrbanM": 500.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 250, "sf": 11, "ldro": 0, "bitrate": 1074, "airtimeMs": 247.8, "dutyPct": 4.96, "chargePerTxMas": 18.87, "avgUa": 3804, "batteryDays": 22, "sensitivity": -131.5, "linkBudget": 145.5, "rangeOpenM": 3670.0, "rangeUrbanM": 570.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 250, "sf": 12, "ldro": 1, "bitrate": 586, "airtimeMs": 495.6, "dutyPct": 9.91, "chargePerTxMas": 37.45, "avgUa": 7521, "batteryDays": 11, "sensitivity": -134.0, "linkBudget": 148.0, "rangeOpenM": 4230.0, "rangeUrbanM": 660.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 500, "sf": 7, "ldro": 0, "bitrate": 21875, "airtimeMs": 10.3, "dutyPct": 0.21, "chargePerTxMas": 1.05, "avgUa": 242, "batteryDays": 345, "sensitivity": -118.5, "linkBudget": 132.5, "rangeOpenM": 1730.0, "rangeUrbanM": 270.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 500, "sf": 8, "ldro": 0, "bitrate": 12500, "airtimeMs": 18.0, "dutyPct": 0.36, "chargePerTxMas": 1.63, "avgUa": 358, "batteryDays": 233, "sensitivity": -121.0, "linkBudget": 135.0, "rangeOpenM": 2000.0, "rangeUrbanM": 310.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 500, "sf": 9, "ldro": 0, "bitrate": 7031, "airtimeMs": 36.1, "dutyPct": 0.72, "chargePerTxMas": 2.99, "avgUa": 628, "batteryDays": 133, "sensitivity": -123.5, "linkBudget": 137.5, "rangeOpenM": 2310.0, "rangeUrbanM": 360.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 500, "sf": 10, "ldro": 0, "bitrate": 3906, "airtimeMs": 72.2, "dutyPct": 1.44, "chargePerTxMas": 5.69, "avgUa": 1170, "batteryDays": 71, "sensitivity": -126.0, "linkBudget": 140.0, "rangeOpenM": 2670.0, "rangeUrbanM": 420.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 500, "sf": 11, "ldro": 0, "bitrate": 2148, "airtimeMs": 123.9, "dutyPct": 2.48, "chargePerTxMas": 9.57, "avgUa": 1946, "batteryDays": 43, "sensitivity": -128.5, "linkBudget": 142.5, "rangeOpenM": 3080.0, "rangeUrbanM": 480.0}, {"power": 10, "txMa": 75, "txEst": true, "txMeas": false, "bw": 500, "sf": 12, "ldro": 0, "bitrate": 1172, "airtimeMs": 247.8, "dutyPct": 4.96, "chargePerTxMas": 18.87, "avgUa": 3804, "batteryDays": 22, "sensitivity": -131.0, "linkBudget": 145.0, "rangeOpenM": 3560.0, "rangeUrbanM": 560.0}];
+const SLEEP_UA = 31;
+const CURRENT = { power: 22, bw: 125, sf: 10 };
+
+const state = { power: "all", bw: "all", sf: "all", sort: "batteryDays", dir: -1 };
+const $ = (id) => document.getElementById(id);
+
+function readNumber(id, fallback, min) {
+  const v = parseFloat($(id).value);
+  return Number.isFinite(v) && v >= min ? v : fallback;
+}
+
+function derive(r) {
+  const interval = readNumber("interval", 5, 1);
+  const battery = readNumber("battery", 2000, 1);
+  const avgUa = r.chargePerTxMas / interval * 1000 + SLEEP_UA;
+  return {
+    ...r,
+    avgUa,
+    batteryDays: battery / (avgUa / 1000) / 24,
+    dutyPct: r.airtimeMs / (interval * 1000) * 100,
+  };
+}
+
+const fmt = {
+  int: (v) => Math.round(v).toLocaleString("en-US"),
+  ms: (v) => v < 100 ? v.toFixed(1) : Math.round(v).toLocaleString("en-US"),
+  km: (m) => (m / 1000).toFixed(m < 1000 ? 2 : 1),
+  days: (d) => d >= 365 * 2 ? (d / 365).toFixed(1) + " y" : Math.round(d) + " d",
+};
+
+const COLUMNS = [
+  { key: "cfg", label: "Setting", unit: "SF / BW / power", sortKey: null },
+  { key: "txMa", label: "TX current", unit: "mA, whole board" },
+  { key: "bitrate", label: "Bit rate", unit: "bit/s" },
+  { key: "airtimeMs", label: "Airtime", unit: "ms per packet" },
+  { key: "dutyPct", label: "Duty cycle", unit: "% of time" },
+  { key: "chargePerTxMas", label: "Charge", unit: "mA·s per TX" },
+  { key: "avgUa", label: "Avg current", unit: "µA" },
+  { key: "batteryDays", label: "Battery life", unit: "estimate" },
+  { key: "sensitivity", label: "Sensitivity", unit: "dBm" },
+  { key: "linkBudget", label: "Link budget", unit: "dB" },
+  { key: "rangeOpenM", label: "Range, open", unit: "km, line of sight" },
+  { key: "rangeUrbanM", label: "Range, urban", unit: "km, buildings" },
+];
+
+function isCurrent(r) {
+  return r.power === CURRENT.power && r.bw === CURRENT.bw && r.sf === CURRENT.sf;
+}
+
+function cfgText(r) {
+  return `SF${r.sf} / ${r.bw} kHz / ${r.power} dBm`;
+}
+
+function renderFilters() {
+  const groups = [
+    { key: "power", label: "Power", values: [10, 14, 17, 20, 22], suffix: " dBm" },
+    { key: "bw", label: "Bandwidth", values: [125, 250, 500], suffix: " kHz" },
+    { key: "sf", label: "SF", values: [7, 8, 9, 10, 11, 12], prefix: "SF" },
+  ];
+  $("filters").innerHTML = groups.map((g) => `
+    <div class="group" role="group" aria-label="${g.label}">
+      <span class="label">${g.label}</span>
+      <button class="chip" type="button" data-key="${g.key}" data-value="all" aria-pressed="${state[g.key] === "all"}">All</button>
+      ${g.values.map((v) => `<button class="chip" type="button" data-key="${g.key}" data-value="${v}"
+        aria-pressed="${String(state[g.key]) === String(v)}">${g.prefix || ""}${v}${g.suffix || ""}</button>`).join("")}
+    </div>`).join("") + `<span class="count" id="count"></span>`;
+  $("filters").querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => {
+    const v = b.dataset.value;
+    state[b.dataset.key] = v === "all" ? "all" : Number(v);
+    renderFilters();
+    renderTable();
+  }));
+}
+
+function renderHead() {
+  $("head").innerHTML = COLUMNS.map((c) => {
+    if (c.sortKey === null) {
+      return `<th scope="col" style="text-align:left"><span class="label">${c.label}</span></th>`;
+    }
+    const sort = state.sort === c.key ? (state.dir > 0 ? "ascending" : "descending") : "none";
+    return `<th scope="col" aria-sort="${sort}"><button type="button" data-key="${c.key}">${c.label}<span class="unit">${c.unit}</span></button></th>`;
+  }).join("");
+  $("head").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    const k = b.dataset.key;
+    if (state.sort === k) {
+      state.dir = -state.dir;
+    } else {
+      state.sort = k;
+      state.dir = ["airtimeMs", "dutyPct", "chargePerTxMas", "avgUa", "txMa", "sensitivity"].includes(k) ? 1 : -1;
+    }
+    renderHead();
+    renderTable();
+  }));
+}
+
+function renderTable() {
+  const rows = ROWS.map(derive).filter((r) =>
+    (state.power === "all" || r.power === state.power) &&
+    (state.bw === "all" || r.bw === state.bw) &&
+    (state.sf === "all" || r.sf === state.sf));
+  rows.sort((a, b) => (a[state.sort] - b[state.sort]) * state.dir ||
+    a.power - b.power || a.bw - b.bw || a.sf - b.sf);
+  const maxDays = Math.max(...rows.map((r) => r.batteryDays), 1);
+  const maxRange = Math.max(...rows.map((r) => r.rangeOpenM), 1);
+  const maxUrban = Math.max(...rows.map((r) => r.rangeUrbanM), 1);
+
+  $("body").innerHTML = rows.map((r) => `
+    <tr class="${isCurrent(r) ? "current" : ""}">
+      <td class="cfg">${cfgText(r)}${isCurrent(r) ? '<span class="tag now">now</span>' : ""}</td>
+      <td>${r.txMa}${r.txMeas ? '<span class="est"> meas</span>' : r.txEst ? '<span class="est"> est</span>' : ""}</td>
+      <td>${fmt.int(r.bitrate)}</td>
+      <td>${fmt.ms(r.airtimeMs)}</td>
+      <td>${r.dutyPct.toFixed(r.dutyPct < 10 ? 2 : 1)}${r.dutyPct > 10 ? '<span class="tag warn">&gt;10%</span>' : ""}</td>
+      <td>${r.chargePerTxMas.toFixed(2)}</td>
+      <td>${fmt.int(r.avgUa)}</td>
+      <td><span class="bar batt"><i><b style="width:${(r.batteryDays / maxDays * 100).toFixed(1)}%"></b></i>${fmt.days(r.batteryDays)}</span></td>
+      <td>${r.sensitivity.toFixed(1)}</td>
+      <td>${r.linkBudget.toFixed(1)}</td>
+      <td><span class="bar range"><i><b style="width:${(r.rangeOpenM / maxRange * 100).toFixed(1)}%"></b></i>${fmt.km(r.rangeOpenM)}</span></td>
+      <td><span class="bar range"><i><b style="width:${(r.rangeUrbanM / maxUrban * 100).toFixed(1)}%"></b></i>${fmt.km(r.rangeUrbanM)}</span></td>
+    </tr>`).join("");
+  $("count").textContent = `${rows.length} of ${ROWS.length} options`;
+}
+
+const PICKS = [
+  { title: "Current setting", cfg: CURRENT, cls: "current",
+    note: "What both boards run today." },
+  { title: "Previous setting", cfg: { power: 22, bw: 125, sf: 8 },
+    note: "4× less airtime than SF10 for 5 dB less link budget. On the SX1262, raising power costs less battery than raising SF." },
+  { title: "Longest battery", cfg: { power: 10, bw: 125, sf: 7 },
+    note: "Within the usual 10 mW licence-free limit. Enough for a house or a small site." },
+  { title: "Longest range", cfg: { power: 22, bw: 125, sf: 12 },
+    note: "About 1 s on air per packet: right at the 10% duty limit even at a 10 s interval, and drains a battery in weeks." },
+];
+
+function renderPicks() {
+  $("picks").innerHTML = PICKS.map((p) => {
+    const r = derive(ROWS.find((x) => x.power === p.cfg.power && x.bw === p.cfg.bw && x.sf === p.cfg.sf));
+    return `<article class="pick ${p.cls || ""}">
+      <h3>${p.title}</h3>
+      <span class="cfg">${cfgText(r)}</span>
+      <dl>
+        <dt>Airtime</dt><dd>${fmt.ms(r.airtimeMs)} ms</dd>
+        <dt>Avg current</dt><dd>${fmt.int(r.avgUa)} µA</dd>
+        <dt>Battery life</dt><dd>${fmt.days(r.batteryDays)}</dd>
+        <dt>Range open / urban</dt><dd>${fmt.km(r.rangeOpenM)} / ${fmt.km(r.rangeUrbanM)} km</dd>
+      </dl>
+      <p>${p.note}</p>
+    </article>`;
+  }).join("");
+}
+
+function renderAll() {
+  renderPicks();
+  renderTable();
+}
+
+["interval", "battery"].forEach((id) => $(id).addEventListener("input", renderAll));
+renderFilters();
+renderHead();
+renderAll();
+</script>

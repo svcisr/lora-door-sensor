@@ -1,0 +1,9 @@
+# Keep firmware images and vendor files byte-exact
+*.hex   -text
+*.bin   binary
+*.pdf   binary
+*.docx  binary
+*.rar   binary
+*.zip   binary
+*.exe   binary
+*.webp  binary
