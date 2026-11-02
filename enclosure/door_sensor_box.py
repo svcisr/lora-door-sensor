@@ -60,7 +60,7 @@ SMA_Z = 17.0  # SMA centre above the MCU PCB bottom
 SMA_D = 6.35  # SMA thread (1/4-36)
 SMA_LEN = 9.0  # SMA length beyond the carrier edge  (MEASURE)
 SMA_CLEAR = 0.25
-SMA_FROM_EDGE = 12.5  # SMA centre from the PCB long edge away from the reed board (user-measured)
+SMA_FROM_EDGE = 12.5  # SMA centre from the PB header edge = low-Y edge, away from the reed slot (user-confirmed)
 SMA_END_GAP = 0.3  # board stack end to the SMA wall
 SMA_FACE_D, SMA_FACE_DEPTH = 11.0, 1.0  # outside spot face: thinner wall, more thread outside
 

@@ -236,10 +236,20 @@ touched the parts in the first print), held by a back rib and a plate behind its
 28.26 mm including rear-corner ears; wire pads are at that edge, so nothing may reach onto the
 faces there). The first print's USB hole had to be opened 1.2 mm up (receptacle off-centre; now
 `USB_Z_OFF`). The reed board stands on edge beside the board, against the opposite long wall.
+Receiver box: `enclosure/receiver_box.py` (board + Shelly UNI 38.5 x 20.7 standing on edge beside
+it, two snap tabs + four M3 corner screws, lid holes with short guide cylinders over KEY/RST, push
+stick, 3 mm holes over the two perfboard LEDs). Switch and LED positions come from a top photo
+(homography on the 4 mounting holes + perfboard height correction, ~+-0.8 mm); check image
+`enclosure/receiver_hole_check.png`. The Shelly's parts reach its PCB edges on both faces, so
+nothing may grip it: a partition wall between it and the board (open at both ends for wires)
+keeps it in its lane. Its lane's end walls are closed (user's choice).
+SMA centre 12.5 mm from the PB header edge (user-confirmed); KEY is on that edge, RST on the
+PC13 edge. With the component side up and the USB end at low X, the PB edge is at low Y (both
+boxes). The sensor's reed slot is on the high-Y (PC13) wall, so its wires cross the board.
 The base/lid split is at the SMA centre height. The board sits on printed pins in its mounting
 holes (65.5 x 24.5 mm centres, user-measured; PCB 72 x 30), with no nylon standoffs. Run it with a
-venv that has `cadquery` (not the PlatformIO penv). SMA centre 12.5 mm from the PCB edge away
-from the reed board (measured), carrier flush with the PCB end. Perfboard overhang and the reed
+venv that has `cadquery` (not the PlatformIO penv). SMA centre 12.5 mm from the PB header edge
+(user-confirmed), carrier flush with the PCB end. Perfboard overhang and the reed
 board size are estimates from photos (see its README).
 
 ## Open items
