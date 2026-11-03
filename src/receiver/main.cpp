@@ -1,8 +1,8 @@
 ﻿// Receiver: listens for door status packets and drives two outputs.
 //   PIN_DOOR_OUT   = last received door state (1 = open), held while the link is down
 //   PIN_NOLINK_OUT = 1 when no valid packet arrived for the link timeout
-//   PIN_KEY: each press steps the link timeout 7 s -> 33 s -> 190 s (see door_mode.h);
-//            set it to match the sensor's heartbeat (2 s / 10 s / 60 s)
+//   PIN_KEY: each press steps the link timeout 20 s -> 65 s -> 370 s (see door_mode.h);
+//            set it to match the sensor's heartbeat (5 s / 20 s / 2 min)
 #include <Arduino.h>
 #include <IWatchdog.h>
 
@@ -18,7 +18,7 @@ static constexpr uint32_t RADIO_REINIT_MS = 60000UL;   // while the link is down
 static auto &Log = Serial;   // USART1, see platformio.ini
 
 static volatile bool packetFlag = false;
-static DoorMode mode = MODE_NORMAL;
+static DoorMode mode = MODE_AT_BOOT;
 static bool keyWasDown = false;
 static bool linkUp = false;
 static bool haveSeq = false;
@@ -65,7 +65,6 @@ static void pollKey() {
     delay(DEBOUNCE_MS);
     if (digitalRead(PIN_KEY) == LOW) {
       mode = modeNext(mode);
-      modeSave(mode);
       logLinkTimeout(F("KEY: link timeout "));
       IWatchdog.reload();
       modeBlink(mode);
@@ -85,6 +84,8 @@ static void handlePacket() {
   }
   float rssi = radio.getRSSI();
   float snr = radio.getSNR();
+  // Sensor carrier minus ours: both boards use plain crystals (no TCXO)
+  float freqErrorHz = radio.getFrequencyError();
   radio.startReceive();
 
   DoorStatus status;
@@ -111,6 +112,8 @@ static void handlePacket() {
   Log.print(rssi, 1);
   Log.print(F(" snr="));
   Log.print(snr, 1);
+  Log.print(F(" ferr="));
+  Log.print(freqErrorHz, 0);
   Log.print(F(" vdd="));
   Log.print(status.vddMv / 1000.0f, 2);
   if (haveSeq) {
@@ -146,7 +149,6 @@ void setup() {
   }
   IWatchdog.begin(WATCHDOG_US);
 
-  mode = modeLoad();
   logLinkTimeout(F("Link timeout "));
   modeBlink(mode);
   keyWasDown = digitalRead(PIN_KEY) == LOW;

@@ -120,7 +120,8 @@ def read_config():
         "sf": int(define("LORA_SF")),
         "bw": int(define("LORA_BW_KHZ")),
         "power": int(define("LORA_TX_POWER_DBM")),
-        "interval": int(define("TX_PERIOD_MS") // 1000),
+        # the heartbeat every power-up starts with (MODE_AT_BOOT = slow)
+        "interval": int(define("TX_PERIOD_SLOW_MS") // 1000),
     }
 
 

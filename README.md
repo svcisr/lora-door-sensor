@@ -3,12 +3,12 @@
 Two DX-SMART **DX-LR30-433M22SP (T1)** kits: a **DX-PJ26-V1.1** MCU board (STM32F103C8T6, USB-C via
 a CH340) with the **LR30-A** radio carrier (Semtech SX1262, 433 MHz) plugged in.
 
-- **Sensor** (battery): reads a reed switch and sends the door state on every heartbeat (2 s, 10 s
-  or 1 min, selected with KEY; default 10 s), and immediately when the door changes. Each change
-  is sent 3 times, about 1.3 s apart, so one lost packet doesn't matter. Sleeps in STOP mode
+- **Sensor** (battery): reads a reed switch and sends the door state on every heartbeat (5 s, 20 s
+  or 2 min, selected with KEY; 2 min at every power-up), and immediately when the door changes. Each change
+  is sent 3 times, about 2 s apart, so one lost packet doesn't matter. Sleeps in STOP mode
   between transmissions.
 - **Receiver**: drives a DOOR output (1 = open, 0 = closed) and a NO-LINK output (1 = no valid
-  packet for the link timeout: 7 s, 33 s or 190 s, selected with KEY; default 33 s). While the link
+  packet for the link timeout: 20 s, 65 s or 370 s, selected with KEY; 370 s at every power-up). While the link
   is down, DOOR keeps the last received state.
 
 ## Wiring
@@ -16,7 +16,7 @@ a CH340) with the **LR30-A** radio carrier (Semtech SX1262, 433 MHz) plugged in.
 | Board | Pin | Header pin | Function |
 |---|---|---|---|
 | Sensor | PB13 | 25 | Reed switch to GND (internal pull-up). Closed = 0 (door closed), open = 1 (door open). Add a **100 nF** ceramic capacitor from PB13 to GND at the board (pins 25 and 23) against noise; twist the reed wires if longer than ~1 m. |
-| Both | PB12 | (KEY) | On-board **KEY** button: each press steps to the next mode, fast → normal → slow → fast. Sensor heartbeat **2 s / 10 s / 1 min**, receiver link timeout **7 s / 33 s / 190 s**. The LED confirms with **1 / 2 / 3 blinks** (also at power-up). Set both boards of a pair to the same mode. The setting survives power loss but returns to normal (2 blinks) after a firmware upload. |
+| Both | PB12 | (KEY) | On-board **KEY** button: each press steps to the next mode, fast → normal → slow → fast. Sensor heartbeat **5 s / 20 s / 2 min**, receiver link timeout **20 s / 65 s / 370 s**. The LED confirms with **1 / 2 / 3 blinks** (also at power-up). Set both boards of a pair to the same mode. Every power-up starts in slow (3 blinks: 2 min / 370 s); the KEY setting is not saved. |
 | Receiver | PB13 | 25 | DOOR output, 3.3 V push-pull |
 | Receiver | PB14 | 26 | NO-LINK output, 3.3 V push-pull |
 | Both | GND | 18 / 23 | Ground |
@@ -100,18 +100,20 @@ pio device monitor -e receiver --port COM6
 ```
 
 The sensor prints `TX seq=… door=… vdd=… (reason) wakes=… awake=…ms` (early wake-ups from
-STOP and time spent awake since the previous packet); the receiver prints `RX seq=… door=… rssi=… snr=… vdd=…`
+STOP and time spent awake since the previous packet); the receiver prints `RX seq=… door=… rssi=… snr=… ferr=… vdd=…` (ferr = the sensor's carrier
+offset in Hz)
 plus `LINK UP` / `LINK LOST`. Both print `RADIO OK` at start-up.
 
 ## Test
 
-1. Power both boards. Receiver log shows a packet about every 10 s; NO-LINK (PB14) goes to 0.
+1. Power both boards: 3 blinks each (slow). Receiver log shows a packet about every 121 s;
+   NO-LINK (PB14) goes to 0.
 2. Connect the sensor's PB13 (header pin 25) to GND: receiver PB13 goes to 0 within a second.
    Remove the wire: back to 1.
-3. Press KEY once on the sensor and once on the receiver: 3 blinks each, packets every ~60.3 s.
-   Again: 1 blink each, packets every ~2.3 s. Again: 2 blinks each, back to ~10.3 s.
-4. Unplug the sensor: one link timeout (33 s in normal mode) after its last packet, receiver PB14
-   goes to 1 and PB13 keeps its value.
+3. Press KEY once on the sensor and once on the receiver: 1 blink each, packets every ~6 s.
+   Again: 2 blinks each, packets every ~21 s. Again: 3 blinks each, back to ~121 s.
+4. Unplug the sensor: one link timeout (370 s in slow mode, 65 s in normal) after its last
+   packet, receiver PB14 goes to 1 and PB13 keeps its value.
 
 ## Configuration
 
@@ -124,11 +126,12 @@ your local rules.
 
 ## Battery operation (sensor)
 
-- Average current at SF10 / 22 dBm (118 mA radio + ~20 mA MCU for ~289 ms per packet), 5000 mAh
-  21700, before board overhead: **2 s** ~17.5 mA, ~12 days; **10 s** ~4 mA, ~50 days;
-  **1 min** ~0.7 mA, ~9 months. At 2 s the radio is on air ~12.6% of the time (over the usual
-  10% limit). Lower SF or a longer TX interval saves the most; see
-  [docs/lora-options.html](docs/lora-options.html) for every option.
+- Average battery current at SF12 / 22 dBm (140 mA measured during TX, ~991 ms per packet,
+  ~139 mAs per packet; 31 µA asleep behind a TPS63802), 5000 mAh 21700: **5 s** heartbeat
+  (6 s apart) ~23 mA, ~9 days; **20 s** (21 s apart) ~6.7 mA, ~1 month; **2 min** (121 s
+  apart) ~1.2 mA, ~6 months. On air: ~17% of the time at 5 s (over the usual 10% limit), ~5% at
+  20 s, under 1% at 2 min. Each door change adds 3 packets. Lower SF or a longer TX interval saves the most; at
+  SF10 the same battery lasts about 3x longer. See [docs/lora-options.html](docs/lora-options.html).
 - Feed 3.0–3.6 V (2×AA, or a LiFePO4 cell) directly to a **3V3** pin. Do not use the +5V pin
   (the AMS1117 regulator wastes several mA) and do not feed a 4.2 V Li-ion cell to 3V3.
 - **Prepare the sensor board for battery use** (measured on board 1 with an Otii, 3.3 V on 3V3):
@@ -149,7 +152,7 @@ The test firmware does not answer the bootloader command, so press RST when the 
 
 ## How it works
 
-- LoRa 433.5 MHz, SF10, 125 kHz, CR 4/5, private sync word, hardware CRC. Packet: 10 bytes with
+- LoRa 433.5 MHz, SF12, 125 kHz, CR 4/5 (low-data-rate optimisation on), private sync word, hardware CRC. Packet: 10 bytes with
   network ID, door state, sequence number, supply voltage and a CRC-8; anything else is ignored.
 - Radio setup follows the vendor reference code: DC-DC regulator, crystal (no TCXO), crystal trim
   XTA=0x04/XTB=0x2F, RF switch on TXEN (PA0) / RXEN (PA1).

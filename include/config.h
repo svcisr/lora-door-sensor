@@ -42,11 +42,17 @@
 // Radio
 // ---------------------------------------------------------------------------
 #define LORA_FREQ_MHZ       433.5f
+#ifndef LORA_BW_KHZ
 #define LORA_BW_KHZ         125.0f
-#define LORA_SF             10      // ~289 ms per packet (see docs/lora-options.html)
+#endif
+#ifndef LORA_SF                     // tests can override it: PLATFORMIO_BUILD_FLAGS="-D LORA_SF=10"
+#define LORA_SF             12      // ~991 ms per packet, LDRO on (see docs/lora-options.html)
+#endif
 #define LORA_CR             5       // coding rate 4/5
 #define LORA_SYNC_WORD      0x12    // private network
+#ifndef LORA_TX_POWER_DBM
 #define LORA_TX_POWER_DBM   22      // check your local 433 MHz limits (often 10 dBm)
+#endif
 #define LORA_PREAMBLE       8
 
 // Crystal load trimming used by the vendor firmware for this module.
@@ -62,16 +68,17 @@
 // ---------------------------------------------------------------------------
 // Timing
 // ---------------------------------------------------------------------------
-// Modes selected with KEY (saved in flash; a firmware upload resets to normal).
-// Sensor heartbeat; actual spacing = period + ~0.3 s airtime at SF10.
-#define TX_PERIOD_FAST_MS   2000UL
-#define TX_PERIOD_MS        10000UL  // normal (default)
-#define TX_PERIOD_SLOW_MS   60000UL
+// Modes selected with KEY; every power-up starts in slow (MODE_AT_BOOT, not saved).
+// Sensor heartbeat; actual spacing = period + ~1.0 s airtime at SF12.
+#define TX_PERIOD_FAST_MS   5000UL
+#define TX_PERIOD_MS        20000UL  // normal
+#define TX_PERIOD_SLOW_MS   120000UL // slow (at power-up)
 // Receiver: NO-LINK after this long without a valid packet. Set the receiver to the
-// same mode as its sensor (~3 heartbeats: NO-LINK after 2 consecutive misses).
-#define LINK_TIMEOUT_FAST_MS 7000UL
-#define LINK_TIMEOUT_MS     33000UL  // normal (default)
-#define LINK_TIMEOUT_SLOW_MS 190000UL
+// same mode as its sensor. Just over 3 packet spacings (~6 / ~21 / ~121 s at SF12), so up
+// to 2 missed packets in a row are tolerated.
+#define LINK_TIMEOUT_FAST_MS 20000UL
+#define LINK_TIMEOUT_MS     65000UL  // normal
+#define LINK_TIMEOUT_SLOW_MS 370000UL // slow (at power-up)
 #define DEBOUNCE_MS         30UL
 #define DOOR_STABLE_MS      10UL    // sensor: input must read the same this long to count
 #define DOOR_STABLE_TIMEOUT_MS 200UL  // sensor: still changing after this = noise, ignored

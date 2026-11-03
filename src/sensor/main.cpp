@@ -1,7 +1,7 @@
 ﻿// Door sensor: sends the reed switch state on every heartbeat and immediately
 // on change, sleeping in STOP mode in between (battery operation).
 //   PIN_DOOR_IN: contact closed (door closed) = 0, contact open = 1
-//   PIN_KEY: each press steps the heartbeat 2 s -> 10 s -> 60 s (see door_mode.h)
+//   PIN_KEY: each press steps the heartbeat 5 s -> 20 s -> 2 min (see door_mode.h)
 #include <Arduino.h>
 #include <IWatchdog.h>
 
@@ -31,7 +31,7 @@ static volatile bool doorEdge = false;
 static volatile bool keyEdge = false;
 static volatile bool serialWake = false;
 static bool radioOk = false;
-static DoorMode mode = MODE_NORMAL;
+static DoorMode mode = MODE_AT_BOOT;
 static int lastSentDoor = -1;
 static uint16_t seq = 0;
 static uint32_t msSinceCal = 0;
@@ -80,7 +80,6 @@ static void handleKey() {
   bool pressed = digitalRead(PIN_KEY) == LOW;
   if (pressed) {
     mode = modeNext(mode);
-    modeSave(mode);
     logHeartbeat(F("KEY: heartbeat "));
     modeBlink(mode);
     untilHeartbeatMs = modeTxPeriodMs(mode);
@@ -260,7 +259,6 @@ void setup() {
   doorRadioReport(Log, state);
   radioOk = state == RADIOLIB_ERR_NONE;
 
-  mode = modeLoad();
   logHeartbeat(F("Heartbeat "));
   modeBlink(mode);
 

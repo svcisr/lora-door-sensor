@@ -3,7 +3,8 @@
 Four DX-SMART DX-LR30-433M22SP (T1) boards forming two independent pairs (see the board table).
 In each pair the **sensor** (battery, reed switch) sends the door state on every heartbeat and on
 change, and the **receiver** drives a DOOR output and a NO-LINK output. KEY on each board selects
-the mode: sensor heartbeat 2 s / 10 s / 60 s, receiver link timeout 7 s / 33 s / 190 s.
+the mode: sensor heartbeat 5 s / 20 s / 2 min, receiver link timeout 20 s / 65 s / 370 s
+(since 2026-11-03; before: 2 s / 10 s / 60 s and 7 s / 33 s / 190 s).
 All four are flashed and update over USB-C with one command. Pair 1 is tested end to end; pair 2
 was checked for packets arriving on its receiver.
 User-facing docs are in [README.md](README.md); this file holds what was learned while building it.
@@ -114,8 +115,23 @@ Check which board is on a port before flashing: `serial_log.py` shows `TX seq=` 
 ## Firmware
 
 - `include/config.h`: every pin, radio setting and timing. Both boards must match.
-  Current radio settings: **433.5 MHz, SF10, BW 125 kHz, CR 4/5, 22 dBm**, sync word 0x12,
-  preamble 8, CRC on (changed from SF8 at the user's request; ~289 ms airtime).
+  Current radio settings: **433.5 MHz, SF12, BW 125 kHz, CR 4/5, 22 dBm**, sync word 0x12,
+  preamble 8, CRC on (SF8 -> SF10 -> SF12, each at the user's request; SF12 since 2026-11-03:
+  ~991 ms airtime, LDRO switched on automatically by RadioLib since the symbol is 32.8 ms).
+  Each packet adds ~1.0 s of active time to the heartbeat. Heartbeats changed afterwards to
+  5 s / 20 s / 2 min (spacing ~6 / ~21 / ~121 s at SF12) with link timeouts 20 / 65 / 370 s,
+  just over 3 spacings so 2 missed packets in a row are tolerated. Measured timings and
+  currents elsewhere in this file are SF10 with the old 2 s / 10 s / 60 s heartbeats.
+  Verified on pair 1 (2026-11-03): SF12 at 14 dBm and at 22 dBm, every packet 3.0 s apart (fast
+  mode), RSSI -12 dBm, SNR ~6 dB on the bench. The receiver logs `ferr=` (sensor carrier minus
+  receiver, `getFrequencyError()`): ~2.2 kHz between boards 1 and 2 (~5 ppm), drifting a few Hz
+  per packet, far inside SF12's tolerance. A first SF12 test heard nothing; at that time the
+  ST-LINK had vanished from the PC with its wires (NRST included) still on board 1, so board 1
+  was probably held in reset by the unpowered probe (not proven). Unplug the probe's wires, not
+  only its USB, before using a board standalone.
+- `LORA_SF`, `LORA_BW_KHZ` and `LORA_TX_POWER_DBM` are `#ifndef`-guarded for test builds:
+  `PLATFORMIO_BUILD_FLAGS="-D LORA_SF=10" pio run -e receiver`. Changing that variable makes
+  PlatformIO wipe **all** of `.pio/build`, so flash each test build before building the next.
 - `src/common/door_protocol.*`: 10-byte packet (magic 0xD5, version, network ID 0xA001, type,
   door, seq, VDD in 20 mV, CRC-8 poly 0x07).
 - `src/common/door_radio.*`: RadioLib setup. Keep our own `Module` object: `SX126x::getMod()` and
@@ -126,10 +142,11 @@ Check which board is on a port before flashing: `serial_log.py` shows `TX seq=` 
   its calendar-based alarms break when the prescaler is recalibrated.
 - `src/sensor/main.cpp`: reed on PB13, internal pull-up (user chose to keep it over an external
   500k) + EXTI both edges, 30 ms debounce, TX on change and on every heartbeat. KEY (PB12, EXTI
-  falling) steps the mode in `src/common/door_mode.*`: fast/normal/slow = `TX_PERIOD_FAST_MS` 2 s /
-  `TX_PERIOD_MS` 10 s / `TX_PERIOD_SLOW_MS` 60 s (measured 2.3 / 10.3 / 60.4 s at SF10). Mode is
-  saved with the core's EEPROM emulation (last flash page, magic 0xA8), survives power loss, and
-  a firmware upload's mass erase resets it to normal. LED: 1/2/3 blinks = fast/normal/slow, at boot
+  falling) steps the mode in `src/common/door_mode.*`: fast/normal/slow = `TX_PERIOD_FAST_MS` 5 s /
+  `TX_PERIOD_MS` 20 s / `TX_PERIOD_SLOW_MS` 120 s (old 2 / 10 / 60 s measured 2.3 / 10.3 / 60.4 s
+  at SF10). Every power-up starts in slow (`MODE_AT_BOOT`, user's choice 2026-11-03) on both
+  boards; KEY changes the mode until the next power-up and is no longer saved (the EEPROM
+  emulation is gone). LED: 1/2/3 blinks = fast/normal/slow, at boot
   and on each press. IWDG max is ~26 s, so the sensor sleeps in `SLEEP_CHUNK_MS` 15 s chunks and
   `sleepTimerSleep(ms, &sleptMs)` reports real sleep time: early wake-ups (noise, serial) shorten
   `untilHeartbeatMs` instead of restarting it; any packet restarts it. Door edges are not changes: touching the PB13 wire made
@@ -186,10 +203,10 @@ Check which board is on a port before flashing: `serial_log.py` shows `TX seq=` 
   works because the flasher holds DTR deasserted (BOOT0 high). Built, not yet measured.
 - `src/receiver/main.cpp`: continuous RX with DIO1 interrupt, boosted RX gain, DOOR holds the last
   state when the link is lost, radio re-initialised every 60 s while down, IWDG 4 s. KEY polled
-  in the loop, steps the link timeout `LINK_TIMEOUT_FAST_MS` 7 s / `LINK_TIMEOUT_MS` 33 s /
-  `LINK_TIMEOUT_SLOW_MS` 190 s (same `door_mode` module and LED blinks). The user sets sensor and
-  receiver to the same mode by hand; a mismatch (e.g. sensor 60 s, receiver 33 s) gives false
-  link loss. 7 s vs 2.3 s heartbeats leaves only ~0.1 s margin after 2 misses (user's values).
+  in the loop, steps the link timeout `LINK_TIMEOUT_FAST_MS` 20 s / `LINK_TIMEOUT_MS` 65 s /
+  `LINK_TIMEOUT_SLOW_MS` 370 s (same `door_mode` module and LED blinks). The user sets sensor and
+  receiver to the same mode by hand; a mismatch (e.g. sensor 2 min, receiver 65 s) gives false
+  link loss.
 
 ## Tools
 
