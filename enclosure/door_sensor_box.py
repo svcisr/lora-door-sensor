@@ -8,13 +8,13 @@ Every size is a parameter below; change one and rerun:
 Layout (top view, X = length, Y = width, origin at the outside corner of the USB end):
 
     USB wall                                                        SMA wall
-    | charger on edge   |     |                                    |
-    | battery holder 85x25    | gap | DX-PJ26 + LR30-A + perfboard |-> SMA
-                                                  | reed board on edge, high-Y wall |
+    | charger on edge | reed board on edge |   (both against the low-Y, PB-side wall)
+    | battery holder 85x25           | gap | DX-PJ26 + LR30-A + perfboard |-> SMA
 
 The base/lid split is at the SMA centre height: the SMA drops into a half-round notch
 in the base, the lid closes the other half, and the thread sticks out of the end wall.
-The lid top edges are rounded (R_TOP).
+The lid top edges are rounded (R_TOP); it snaps on with two tabs per long side. The long
+walls have vertical stiffening ribs inside.
 """
 
 from pathlib import Path
@@ -39,6 +39,7 @@ TOP_CLEAR = 2.0  # tallest component to the lid's inner top
 CHG_L, CHG_H, CHG_T = 28.26, 17.3, 1.6  # TP4056 board on its long edge beside the battery, parts toward the wall
 # CHG_L includes the two ears at the rear corners (measured); the middle of the rear edge is ~1.3 mm shorter.
 CHG_BACK = 1.0  # solder tails behind the PCB (battery side)
+CHG_STOP_T = 2.0  # rear stop plate behind the charger, toward the box's middle (1.2 until it broke, print 2)
 USB_GAP = 0.9  # USB-C face to the lid lip/tab zone
 USB_W, USB_T = 8.94, 3.26  # USB-C receptacle
 USB_PROTRUDE = 1.5  # receptacle front beyond the PCB edge  (MEASURE)
@@ -46,8 +47,13 @@ USB_CLEAR = 0.4  # across the receptacle
 USB_CLEAR_Z = 0.6  # along it
 USB_Z_OFF = 1.2  # receptacle centre above the PCB's mid-height (first print: hole opened 1.2 mm up)
 
-BATT_L, BATT_W, BATT_H = 85.0, 25.0, 25.0  # 21700 holder
-MID_GAP = 4.0  # battery holder to board (wires)
+BATT_L, BATT_W, BATT_H = 85.0, 25.0, 27.5  # 21700 holder; H = cell top (print 1: 26 mm; print 2 still pressed, +1)
+SCREW_BOSS_D = 7.0  # centre screw between the battery holder and the board
+SCREW_PILOT = 2.5  # M3 self-tapping into resin (2.2 for M2.5)
+SCREW_CLEAR, SCREW_HEAD_D = 3.4, 6.2
+SCREW_LEN, SCREW_ENGAGE = 12.0, 9.0  # M3 x 12, 9 mm into the base boss
+LID_PILLAR = 4.0  # lid pillar under the screw head, down from the lid's inner top
+MID_GAP = SCREW_BOSS_D + 1.4  # battery holder to board: the boss plus room for wires around it
 
 BRD_L, BRD_W = 72.0, 30.0  # DX-PJ26 PCB
 BRD_H = 20.0  # stack height above the PCB bottom (perfboard on top)
@@ -60,39 +66,55 @@ SMA_Z = 17.0  # SMA centre above the MCU PCB bottom
 SMA_D = 6.35  # SMA thread (1/4-36)
 SMA_LEN = 9.0  # SMA length beyond the carrier edge  (MEASURE)
 SMA_CLEAR = 0.25
-SMA_FROM_EDGE = 12.5  # SMA centre from the PB header edge = low-Y edge, away from the reed slot (user-confirmed)
+SMA_FROM_EDGE = 12.5  # SMA centre from the PB header edge = low-Y edge (user-confirmed)
 SMA_END_GAP = 0.3  # board stack end to the SMA wall
 SMA_FACE_D, SMA_FACE_DEPTH = 11.0, 1.0  # outside spot face: thinner wall, more thread outside
 
 REED_L, REED_H, REED_T = 33.0, 10.0, 5.0  # reed board standing on edge (length from photo)  (MEASURE)
-REED_X_OFF = 4.0  # from the board stack's battery end
+REED_GAP = 1.0  # charger's rear stop to the reed slot (the slot runs along the low-Y wall)
+REED_WALL_T = 2.0  # wall behind the reed board, toward the battery
+REED_WALL_H = CHG_H - 1.0  # as tall as the charger's stop plate (6 mm until print 2)
 
 LIP_GAP, LIP_T, LIP_DEPTH = 0.15, 1.4, 3.0  # lid alignment lip
 TAB_W, TAB_LEN = 8.0, 11.0  # snap tabs (cantilever below the split)
-HOOK_H, HOOK_DEPTH = 1.6, 0.5  # hook height and reach into the wall window
+HOOK_H, HOOK_DEPTH = 1.6, 0.8  # hook height and reach into the wall window (0.5 until print 2)
+WINDOW_Z_OFF = 0.5  # snap windows raised above the nominal hook position (hooks sat too high to lock in print 1)
 TAB_SLOT = 1.0  # slit between tab and lip
-TAB_X = (22.0, 70.0, 140.0)  # tab centres, from the inner USB wall, both long sides
+# Tab centres from the inner USB wall, (x, side): low-Y over the charger, high-Y over the board, and
+# one per side in the battery/board gap (added below as TABS): where a root gusset has room.
+TAB_LOW_X, TAB_HIGH_X = 22.0, 140.0
+GUSSET_W, GUSSET_D = 1.6, 2.0  # rib inside each tab, from the lid's inner top down to
+GUSSET_TO = 0.5  # this fraction of the tab length, tapering to nothing
 
 RIB_T, FENCE_H = 1.2, 3.0  # locating ribs on the floor
+WALL_RIB_W, WALL_RIB_D = 3.0, 2.0  # stiffening ribs on the inside of the long walls (2 x 1.2 until print 2)
+WALL_RIB_X = (50.0, 80.0, 110.0, 160.0)  # rib centres (low-Y ones at the reed slot are skipped)
+WALL_RIB_UP = 4.0  # ribs continue above the base edge into slots in the lid, which keeps the walls in
 HOLDDOWN_GAP = 0.5  # lid ribs above the battery holder and the perfboard's blank rear strip
+SEP_SLOT_L, SEP_SLOT_W = 10.0, 2.0  # lid slot for a battery isolation tab, across the cell (1.5 wide at first)
+HOLDER_END_T = 3.5  # holder end wall + contact plate at the cell's + end (board side); 2.0 + 1.5 per user
 
 # ---------------------------------------------------------------- derived layout
 # Interior coordinates: (0,0,0) = inner corner of the USB end, low-Y side, floor top.
 BRD_ENV_W = BRD_W + 2 * FIT
 BRD_Y0 = MARGIN
 BRD_Y1 = BRD_Y0 + BRD_ENV_W
-REED_Y0 = BRD_Y1 + RIB_T  # rib between board and reed doubles as the board rail
-W_IN = REED_Y0 + REED_T + 2 * FIT
 
 CHG_X1 = CHG_L + FIT  # PCB front edge touches the inner wall, USB-C goes into the wall
 USB_Y, USB_Z = MARGIN + USB_GAP + USB_T / 2, CHG_H / 2 + USB_Z_OFF
 CHG_Y0 = USB_Y + USB_T / 2  # PCB face with the parts and the USB-C (low-Y wall side)
 CHG_Y1 = CHG_Y0 + CHG_T  # PCB back, facing the battery
 
-BATT_X0 = MARGIN
+BATT_X0 = MARGIN + 1.0  # clear of the lid's rounded inner corner at the top
 BATT_X1 = BATT_X0 + BATT_L + 2 * FIT
 BATT_Y0 = CHG_Y1 + CHG_BACK + 0.2 + RIB_T  # past the charger's solder tails and the corner stops
 BATT_Y1 = BATT_Y0 + BATT_W + 2 * FIT
+W_IN = max(BRD_Y1, BATT_Y1) + MARGIN
+
+# Reed board on edge against the low-Y (PB side) wall, right after the charger, beside the battery.
+REED_X0 = CHG_X1 + CHG_STOP_T + REED_GAP
+REED_X1 = REED_X0 + REED_L + 2 * FIT
+REED_Y1 = REED_T + 2 * FIT
 
 BRD_X0 = BATT_X1 + MID_GAP  # board stack envelope: perfboard overhang + PCB + carrier overhang
 BRD_X1 = BRD_X0 + PERF_OVERHANG + BRD_L + CARRIER_OVERHANG + 2 * FIT
@@ -109,20 +131,25 @@ H_IN = max(BATT_H, POST_H + BRD_H) + TOP_CLEAR
 SPLIT = POST_H + SMA_Z  # interior height of the base/lid joint
 SMA_Y = BRD_Y0 + FIT + SMA_FROM_EDGE
 
-REED_X0 = BRD_X0 + REED_X_OFF
-REED_X1 = REED_X0 + REED_L + 2 * FIT
-
 L_OUT = L_IN + 2 * WALL
 W_OUT = W_IN + 2 * WALL
 HB = FLOOR + SPLIT  # base outer height
 HO = FLOOR + H_IN + TOP  # overall height
 CAP = WALL + LIP_GAP + LIP_T  # lid side thickness above the split
 SMA_OUT = SMA_LEN - FIT - SMA_END_GAP - (WALL - SMA_FACE_DEPTH)  # thread past the spot face
+SCREW_X, SCREW_Y = BATT_X1 + MID_GAP / 2, W_IN / 2
+TABS = ((TAB_LOW_X, -1), (SCREW_X, -1), (SCREW_X, 1), (TAB_HIGH_X, 1))
+SEP_X = BATT_X1 - FIT - HOLDER_END_T  # where the cell's + end meets the holder's contact
+SEP_Y = BATT_Y0 + FIT + BATT_W / 2
+SCREW_MEET = H_IN - LID_PILLAR  # where the base boss and the lid pillar meet (interior z)
 
 assert HO - HB > R_TOP, "lid too short for R_TOP"
 assert MARGIN >= LIP_GAP + LIP_T + 0.3, "lip would touch components"
 assert W_IN - BATT_Y1 >= MARGIN, "battery holder too close to the wall"
 assert CHG_H < SPLIT - LIP_DEPTH, "charger would hit the lid lip"
+assert REED_Y1 + REED_WALL_T < BATT_Y0 - RIB_T and REED_X1 < BATT_X1, "reed slot runs into the battery stops"
+assert all(not REED_X0 - TAB_W / 2 - 1 < t < REED_X1 + TAB_W / 2 + 1 for t, s in TABS if s < 0), "tab over the reed board"
+assert all(abs(r - t) > (WALL_RIB_W + TAB_W) / 2 + 2 for r in WALL_RIB_X for t, s in TABS), "wall rib on a tab"
 
 
 # ---------------------------------------------------------------- helpers
@@ -159,6 +186,32 @@ def hook(x_center, outward):
     return cq.Workplane("YZ", origin=(x0, 0, 0)).polyline(pts).close().extrude(TAB_W)
 
 
+def gusset(x_center, outward):
+    """Rib inside a tab: full depth from the lid's inner top to the split, then tapering to the tab."""
+    top, tip = HO - TOP + 0.5, HB - TAB_LEN * GUSSET_TO
+    yi = CAP if outward < 0 else W_OUT - CAP  # tab's inner face
+    yo = yi - outward * GUSSET_D
+    pts = [(yi, top), (yo, top), (yo, HB), (yi, tip)]
+    return cq.Workplane("YZ", origin=(x_center - GUSSET_W / 2, 0, 0)).polyline(pts).close().extrude(GUSSET_W)
+
+
+def wall_rib(x_center, outward):
+    """Wall rib from the floor to WALL_RIB_UP above the split, chamfered on the wall side at the top
+    so it slides into its slot in the lid."""
+    top = HB + WALL_RIB_UP
+    yw = WALL if outward < 0 else W_OUT - WALL  # inner face of the wall
+    yi = yw - outward * WALL_RIB_D
+    c = 0.6
+    pts = [(yw, FLOOR - 0.01), (yi, FLOOR - 0.01), (yi, top), (yw - outward * c, top), (yw, top - c)]
+    return cq.Workplane("YZ", origin=(WALL + x_center - WALL_RIB_W / 2, 0, 0)).polyline(pts).close().extrude(WALL_RIB_W)
+
+
+def wall_rib_sides(x):
+    """Long walls that get a rib at x (none on the low-Y wall along the reed slot)."""
+    skip_low = REED_X0 - RIB_T - WALL_RIB_W < x < REED_X1 + RIB_T + WALL_RIB_W
+    return [side for side in (-1, 1) if not (side < 0 and skip_low)]
+
+
 def tab_y(outward):
     return WALL + LIP_GAP if outward < 0 else W_OUT - WALL - LIP_GAP - LIP_T
 
@@ -183,7 +236,7 @@ def make_base():
     # the plug force. The wire pads (B+/B-/OUT+/OUT-) sit right at that edge, through-hole,
     # so nothing reaches onto either face there.
     base = base.union(box(11.0, CHG_Y1 + 0.15, 0, 5.0, RIB_T, 8.0))
-    base = base.union(box(CHG_X1, CHG_Y0 - 0.5, 0, RIB_T, CHG_T + 2.0, CHG_H - 1.0))
+    base = base.union(box(CHG_X1, CHG_Y0 - 0.5, 0, CHG_STOP_T, CHG_T + 2.0, CHG_H - 1.0))
 
     # USB-C opening (long side vertical), plus a counterbore so a plug overmold
     # reaches the receptacle face.
@@ -218,17 +271,30 @@ def make_base():
         )
         base = base.union(post).union(pin)
 
-    # Reed board slot against the high-Y wall (magnet acts through that wall).
-    base = base.union(box(REED_X0 - RIB_T, BRD_Y1, 0, REED_X1 - REED_X0 + 2 * RIB_T, RIB_T, 6.0))
+    # Reed board slot against the low-Y wall (magnet acts through that wall).
+    base = base.union(box(REED_X0 - RIB_T, REED_Y1, 0, REED_X1 - REED_X0 + 2 * RIB_T, REED_WALL_T, REED_WALL_H))
     for x in (REED_X0 - RIB_T, REED_X1):
-        base = base.union(box(x, REED_Y0, 0, RIB_T, W_IN - REED_Y0, 6.0))
+        base = base.union(box(x, 0, 0, RIB_T, REED_Y1, 6.0))
+
+    # Stiffening ribs on the long walls, clear of the tabs and the reed board. They rise above the
+    # base edge into slots in the lid, where the lid's outer wall stops the base walls bowing out.
+    for x in WALL_RIB_X:
+        for side in wall_rib_sides(x):
+            base = base.union(wall_rib(x, side))
 
     # Snap windows (also release holes: push the hook in with a pin).
     zb = HB - TAB_LEN
-    for xc in TAB_X:
+    for xc, side in TABS:
         x = WALL + xc - TAB_W / 2 - 0.5
-        for y in (-1, W_OUT - WALL - 0.01):
-            base = base.cut(abox(x, y, zb - 0.3, TAB_W + 1, WALL + 1.01, HOOK_H + 0.4))
+        y = -1 if side < 0 else W_OUT - WALL - 0.01
+        base = base.cut(abox(x, y, zb - 0.3 + WINDOW_Z_OFF, TAB_W + 1, WALL + 1.01, HOOK_H + 0.4))
+
+    # Centre screw boss between the battery holder and the board, up to the lid pillar
+    # (0.1 mm short, so the screw pulls the lid down onto the walls).
+    boss = cq.Workplane("XY", origin=(WALL + SCREW_X, WALL + SCREW_Y, FLOOR)).circle(SCREW_BOSS_D / 2).extrude(SCREW_MEET - 0.1)
+    pilot = (cq.Workplane("XY", origin=(WALL + SCREW_X, WALL + SCREW_Y, FLOOR + SCREW_MEET - SCREW_ENGAGE - 2))
+             .circle(SCREW_PILOT / 2).extrude(SCREW_ENGAGE + 3))
+    base = base.union(boss).cut(pilot)
 
     return base.cut(sma_cuts())
 
@@ -253,15 +319,23 @@ def make_lid():
     lip_in = rrect(CAP, CAP, HB - LIP_DEPTH - 1, L_OUT - 2 * CAP, W_OUT - 2 * CAP, LIP_DEPTH + 2, cav_r)
     lid = lid.union(lip_out.cut(lip_in))
 
-    # Snap tabs with slits so they flex independently of the lip.
-    for xc in TAB_X:
+    # Snap tabs with slits so they flex independently of the lip, each with a root gusset.
+    for xc, side in TABS:
         x = WALL + xc
-        for side in (-1, 1):
-            y = tab_y(side)
-            for sx in (x - TAB_W / 2 - TAB_SLOT, x + TAB_W / 2):
-                lid = lid.cut(abox(sx, y - 0.5, HB - LIP_DEPTH - 1, TAB_SLOT, LIP_T + 1, LIP_DEPTH + 1))
-            lid = lid.union(abox(x - TAB_W / 2, y, HB - TAB_LEN, TAB_W, LIP_T, TAB_LEN))
-            lid = lid.union(hook(x, side))
+        y = tab_y(side)
+        for sx in (x - TAB_W / 2 - TAB_SLOT, x + TAB_W / 2):
+            lid = lid.cut(abox(sx, y - 0.5, HB - LIP_DEPTH - 1, TAB_SLOT, LIP_T + 1, LIP_DEPTH + 1))
+        lid = lid.union(abox(x - TAB_W / 2, y, HB - TAB_LEN, TAB_W, LIP_T, TAB_LEN))
+        lid = lid.union(hook(x, side))
+        lid = lid.union(gusset(x, side))
+
+    # Slots for the wall ribs, through the lip and the lid's inner thickening, up to the rib tops.
+    for x in WALL_RIB_X:
+        for side in wall_rib_sides(x):
+            depth = max(WALL_RIB_D, CAP - WALL) + 0.2
+            y0 = WALL if side < 0 else W_OUT - WALL - depth
+            lid = lid.cut(abox(WALL + x - WALL_RIB_W / 2 - 0.2, y0, HB - LIP_DEPTH - 1, WALL_RIB_W + 0.4,
+                               depth, LIP_DEPTH + 1 + WALL_RIB_UP + 0.3))
 
     # SMA end: no lip, thickening or inner top fillet; the board stack and SMA body
     # reach right up to the wall.
@@ -281,6 +355,17 @@ def make_lid():
     z_rib = FLOOR + POST_H + BRD_H + HOLDDOWN_GAP
     x = WALL + BRD_X0 + FIT + 0.5
     lid = lid.union(abox(x, WALL + BRD_Y0, z_rib, 2.5, BRD_Y1 - BRD_Y0, HO - TOP - z_rib + 0.5))
+
+    # Slot over the cell's + contact: an isolation tab pushed in from outside disconnects the battery.
+    lid = lid.cut(abox(WALL + SEP_X - SEP_SLOT_W / 2, WALL + SEP_Y - SEP_SLOT_L / 2, HO - TOP - 1,
+                       SEP_SLOT_W, SEP_SLOT_L, TOP + 2))
+
+    # Centre screw: pillar down to the base boss, clearance hole, counterbore for the head.
+    cx, cy = WALL + SCREW_X, WALL + SCREW_Y
+    seat = FLOOR + SCREW_MEET + SCREW_LEN - SCREW_ENGAGE
+    lid = lid.union(cq.Workplane("XY", origin=(cx, cy, FLOOR + SCREW_MEET)).circle(SCREW_BOSS_D / 2).extrude(LID_PILLAR + 0.5))
+    lid = lid.cut(cq.Workplane("XY", origin=(cx, cy, FLOOR + SCREW_MEET - 1)).circle(SCREW_CLEAR / 2).extrude(LID_PILLAR + TOP + 2))
+    lid = lid.cut(cq.Workplane("XY", origin=(cx, cy, seat)).circle(SCREW_HEAD_D / 2).extrude(HO - seat + 1))
     return lid
 
 
@@ -302,7 +387,7 @@ def make_dummies():
         .circle(SMA_D / 2)
         .extrude(SMA_LEN)
     )
-    d["reed_board"] = box(REED_X0 + FIT, REED_Y0 + FIT, 0, REED_L, REED_T, REED_H)
+    d["reed_board"] = box(REED_X0 + FIT, FIT, 0, REED_L, REED_T, REED_H)
     return d
 
 

@@ -91,6 +91,7 @@ SCREW_LEN, SCREW_ENGAGE = 12.0, 9.0  # M3 x 12; the head seat sits SCREW_LEN - S
 LIP_GAP, LIP_T, LIP_DEPTH = 0.15, 1.4, 3.0
 TAB_W, TAB_LEN = 8.0, 11.0
 HOOK_H, HOOK_DEPTH = 1.6, 0.5
+WINDOW_Z_OFF = 0.5  # snap windows raised above the nominal hook position (sensor box print: hooks sat too high to lock)
 TAB_SLOT = 1.0
 
 
@@ -239,7 +240,7 @@ def make_base():
     for xc in TAB_X:
         x = WALL + xc - TAB_W / 2 - 0.5
         for y in (-1, W_OUT - WALL - 0.01):
-            base = base.cut(abox(x, y, zb - 0.3, TAB_W + 1, WALL + 1.01, HOOK_H + 0.4))
+            base = base.cut(abox(x, y, zb - 0.3 + WINDOW_Z_OFF, TAB_W + 1, WALL + 1.01, HOOK_H + 0.4))
 
     return base.cut(sma_cuts())
 

@@ -252,7 +252,19 @@ USB-C toward the wall (USB-C out the end wall; nothing may touch that side: a fl
 touched the parts in the first print), held by a back rib and a plate behind its rear edge (board
 28.26 mm including rear-corner ears; wire pads are at that edge, so nothing may reach onto the
 faces there). The first print's USB hole had to be opened 1.2 mm up (receptacle off-centre; now
-`USB_Z_OFF`). The reed board stands on edge beside the board, against the opposite long wall.
+`USB_Z_OFF`). The reed board stands on edge against the same (low-Y, PB) wall, right after the
+charger, beside the battery (moved 2026-11-03; was beside the board on the other wall). Four snap
+tabs (two per side, clear of the reed) and inner stiffening ribs on both long walls. The printed
+hooks sat too high to lock, so both boxes' snap windows are 0.5 mm higher (`WINDOW_Z_OFF`).
+One M3 x 12 centre screw between the battery holder and the board (boss + lid pillar). The cell
+in its holder reaches 26 mm above the floor (5 mm above the base edge; it held the printed lid
+open), so `BATT_H` = 26.5 and the lid is 1.5 mm taller. That may also be why the hooks sat high.
+Print 2 (2026-11-05): lid still pressed the cell (BATT_H 27.5, lid 10.5 mm), long walls bowed out
+(wall ribs now 3 x 2 mm, rising 4 mm into slots in the lid), tabs broke at the root (gusset to half the tab
+length; tabs moved to where it fits: low-Y x=22 and gap, high-Y gap and x=140), hook 0.8 mm,
+charger rear stop plate 2 mm thick (it broke at 1.2), wall behind the reed 16.3 mm tall, 2 mm thick. Lid slot 10 x 2 mm over the cell's + contact for
+an isolation tab, centred 3.5 mm in from the holder's + end (`HOLDER_END_T`, user-adjusted).
+With the gusset only the lower half flexes: ~6.6% strain at 0.95 mm deflection (warned).
 Receiver box: `enclosure/receiver_box.py` (board + Shelly UNI 38.5 x 20.7 standing on edge beside
 it, two snap tabs + four M3 corner screws, lid holes with short guide cylinders over KEY/RST, push
 stick, 3 mm holes over the two perfboard LEDs). Switch and LED positions come from a top photo
@@ -262,7 +274,7 @@ nothing may grip it: a partition wall between it and the board (open at both end
 keeps it in its lane. Its lane's end walls are closed (user's choice).
 SMA centre 12.5 mm from the PB header edge (user-confirmed); KEY is on that edge, RST on the
 PC13 edge. With the component side up and the USB end at low X, the PB edge is at low Y (both
-boxes). The sensor's reed slot is on the high-Y (PC13) wall, so its wires cross the board.
+boxes).
 The base/lid split is at the SMA centre height. The board sits on printed pins in its mounting
 holes (65.5 x 24.5 mm centres, user-measured; PCB 72 x 30), with no nylon standoffs. Run it with a
 venv that has `cadquery` (not the PlatformIO penv). SMA centre 12.5 mm from the PB header edge

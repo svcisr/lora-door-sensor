@@ -2,11 +2,13 @@
 
 ![closed](preview_closed.png)
 ![charger slot](preview_charger.png)
+![centre screw](preview_center_screw.png)
+![snap gussets](preview_snap_gussets.png)
 
 Box for the battery sensor: 21700 holder (85 x 25 x 25) and the DX-PJ26 (72 x 30 PCB) + LR30-A +
-perfboard stack (20 high) in line. The TP4056 USB-C charger stands on edge beside the battery
-holder, and the reed board stands on edge beside the board, on opposite long walls.
-Outside 171.1 x 43 x 31 mm.
+perfboard stack (20 high) in line. The TP4056 USB-C charger and then the reed board stand on
+edge beside the battery holder, both against the low-Y (PB side) wall.
+Outside 176.5 x 41.6 x 33.5 mm.
 
 | File | Use |
 |---|---|
@@ -17,10 +19,34 @@ Outside 171.1 x 43 x 31 mm.
 
 ## Design
 
-- **Lid**: R6 rounded top edges and corners. It snaps on with six cantilever tabs (1.4 mm thick,
-  11 mm long, 0.5 mm hook, ~1.1% strain) into windows in the long walls. To open, push the hooks
+- **Lid**: R6 rounded top edges and corners. It snaps on with four cantilever tabs, two per long
+  side (1.4 mm thick, 11 mm long, 0.8 mm hook since print 2), into windows in the long walls:
+  on the low-Y side over the charger and in the battery/board gap, on the high-Y side in that gap
+  and over the board, where there is room for a root gusset (`TABS`). Each tab has a 1.6 mm rib
+  on its inner side from the lid's inner top down to half its length (`GUSSET_TO`), because the
+  print-2 tabs broke at the root. That leaves only the lower half to flex: about 6.6% strain at
+  the gusset tip for the 0.95 mm hook deflection (1.6% without the gusset), so use a tough resin;
+  `GUSSET_TO` 0.25 or `HOOK_DEPTH` 0.5 bring it down. On the first print the hooks sat too high to lock,
+  so the windows in both boxes are 0.5 mm higher than the nominal hook position
+  (`WINDOW_Z_OFF`): 0.6 mm above the catch face, and at the nominal lid height the hook's
+  lead-in rests 0.2 mm on the window's lower edge.
+- **Centre screw**: one M3 x 12 self-tapping screw in the middle of the lid, between the
+  battery holder and the board. A 7 mm boss in the base (2.5 mm pilot, 9 mm of thread) meets a
+  4 mm pillar under the lid top (counterbored head, 3 mm deep), 0.1 mm short so the screw pulls
+  the lid onto the walls. The gap there is 8.4 mm (`MID_GAP`), leaving room for wires on both
+  sides of the boss.
+- **Battery isolation slot**: a 10 x 2 mm slot in the lid across the cell, right over where its
+  + end meets the holder's contact (next to the centre screw), for a plastic tab that keeps the
+  battery disconnected (instead of paper). Its centre is 3.5 mm in from the holder's end
+  (`HOLDER_END_T`; 2 mm at first, moved 1.5 mm toward the battery by the user).
+- **Walls**: vertical stiffening ribs (3 mm wide, 2 mm thick; 2 x 1.2 until print 2) on the inside of both long walls, away from the
+  tabs; the low-Y ones skip the reed slot (`WALL_RIB_X`). They rise 4 mm above the base edge
+  (`WALL_RIB_UP`, chamfered on the wall side) into slots in the lid's lip and inner thickening,
+  where the lid's outer wall stops the long walls bowing outward (they did on print 2). To open, push the hooks
   in through the windows with a pin. A 3 mm lip aligns it. Two ribs hold the battery holder down
-  (0.5 mm gap; add foam tape for a tight fit).
+  (0.5 mm gap; add foam tape for a tight fit). The cell in its holder stands 26 mm above the
+  floor (5 mm above the base edge on the first print, which kept the lid from closing); the
+  print-2 lid still pressed on it, so `BATT_H` is 27.5 and the lid is 10.5 mm tall.
 - **SMA**: the base/lid split is at the SMA centre height, so the board drops in with the SMA in a
   half-round notch and the lid closes the top half. Its centre is 12.5 mm from the PB header
   edge (confirmed), which faces the low-Y wall with the USB end toward the battery; the carrier
@@ -33,7 +59,8 @@ Outside 171.1 x 43 x 31 mm.
   outside counterbore lets the plug overmold reach it. Nothing touches the
   component side: a rib holds the flat back, and a plate behind the rear edge takes the plug
   insertion force. The board is 28.26 mm long including the two ears at its rear corners
-  (measured); the plate is 16.3 mm tall so both ears rest on it. Nothing reaches onto the faces
+  (measured); the plate is 16.3 mm tall so both ears rest on it, and 2 mm thick toward the box's
+  middle (`CHG_STOP_T`; the 1.2 mm one broke on print 2). Nothing reaches onto the faces
   at the rear edge, where the through-hole wire pads (B+/B-/OUT+/OUT-) are. The inner corners
   are 1.5 mm radius so the charger fits right into the corner.
 - **First print (2026-11-02)**: the USB hole had to be opened 1.2 mm upward (now in
@@ -44,8 +71,10 @@ Outside 171.1 x 43 x 31 mm.
 - **Board**: no standoffs. Its four mounting holes (65.5 x 24.5 mm centres) drop onto 2.7 mm
   pins on 4 mm printed posts, which clear the header solder tails. A lid rib on the perfboard's
   blank rear strip keeps it on the pins, and the lid's SMA notch holds the other end.
-- **Reed board**: slot against the high-Y wall (opposite the charger, the PC13 header side), so
-  the magnet goes on that face. Its wires from PB13/GND cross over the board.
+- **Reed board**: slot against the low-Y wall (the PB header side, like the charger), right
+  after the charger's rear stop and beside the battery holder, so the magnet goes on that face
+  near the charger end. Its wires from PB13/GND stay on that side. The wall behind it is as
+  tall as the charger's stop plate (16.3 mm) and 2 mm thick (`REED_WALL_H/T`; 6 mm until print 2).
 
 ## Measure before printing
 
